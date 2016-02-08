@@ -1,0 +1,37 @@
+---
+title: "Comparison of Performance"
+output: html_document
+---
+
+The purpose of HW03 is to compare the performance of different configurations we have learnt so far:  
+1) Sequential Analysis  
+2) Threaded Analysis  
+3) Pseudo Distributed System  
+4) Amazon EWR Distributed System  
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+require(ggplot2)
+require(dplyr)
+
+input <- 'timeOutput'
+out <- 'timeOutput'
+
+results <- dir(input, pattern=".csv", full.names=TRUE)
+merged <- lapply(results , read.csv, header=FALSE)
+result <- bind_rows(merged)
+names(result) <- c("RunType","ValueType", "Value")
+
+finalplot <- ggplot(data=result, aes(x=RunType, y=Value,color=ValueType,group=ValueType)) + geom_line() + geom_point(size=2)
+
+finalplot
+```
+
+
+# ANALYSIS
+* There is a large overhead on the EMR version of the program to create and configure the cluster, and then run the job, making it the slowest from start to end.  The pseudo distributed mode also has some overhead, but definitely lesser than the EMR.  However, for a very large data (~2-3GB+) we will see a better performance from the EMR version of the program.
+* Also, the threaded version is very fast because of the size of the data.  It will be overtaken by the pseudo and EMR versions as the size of the data scales.
+* The sequential will run the slowest, and will perform the worst as the size of the data scales.
+
+# Conclusion:
+* We saw that for the data that we are given, the fastest execution is by the Multi-threaded version of the program, followed by the pseudo and sequential, and the slowest is the EMR version of the program.

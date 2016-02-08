@@ -1,0 +1,12 @@
+s,mean,281
+s,fastMedian,293
+s,median,304
+mt,mean,209
+mt,fastMedian,187
+mt,median,203
+pseudo,median,353
+pseudo,fastMedian,336
+pseudo,mean,323
+emr,mean,588
+emr,fastMedian,568
+emr,median,578
