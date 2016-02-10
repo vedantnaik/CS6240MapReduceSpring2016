@@ -63,6 +63,15 @@ public class LinearRegression {
 			flightDistance = new IntWritable();
 		}
 
+		public AirlineMapperValue(AirlineMapperValue anotherAMV) {
+			this.flightPrice = new DoubleWritable(anotherAMV.getFlightPrice().get());
+			this.flightMonth = new IntWritable(anotherAMV.getFlightMonth().get());
+			this.flightYearIs2015 = new BooleanWritable(anotherAMV.getFlightYearIs2015().get());
+			this.flightYearBetween2010_2014 = new BooleanWritable(anotherAMV.getFlightYearBetween2010_2014().get());
+			this.flightAirTime = new IntWritable(anotherAMV.getFlightAirTime().get());
+			this.flightDistance = new IntWritable(anotherAMV.getFlightDistance().get());
+		}
+
 		void set(DoubleWritable flightPrice, IntWritable flightMonth, BooleanWritable flightYearIs2015,
 				BooleanWritable flightYearBetween2010_2014, IntWritable flightAirTime, IntWritable flightDistance) {
 			this.flightPrice = flightPrice;
@@ -171,8 +180,7 @@ public class LinearRegression {
 			String[] fields = correctedString.split(",");
 			
 			if (FileRecord.csvHeaders.size() == fields.length && FileRecord.isRecordValid(fields)){
-				String carMonthKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + ","
-									+ FileRecord.getValueOf(fields,FileRecord.Field.MONTH);
+				String carKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER);
 				
 				AirlineMapperValue amv = new AirlineMapperValue();
 		
@@ -182,79 +190,73 @@ public class LinearRegression {
 				String flAirTimeStr = FileRecord.getValueOf(fields, FileRecord.Field.AIR_TIME);
 				String flDistStr = FileRecord.getValueOf(fields, FileRecord.Field.DISTANCE);
 				
-				int flyear = Integer.parseInt(flYearStr);
-				
-				double flightPrice = Double.parseDouble(flPriceStr);
-				int flightMonth = Integer.parseInt(flMonthStr);
-				boolean flightYearIs2015 = flyear == 2015;
-				boolean flightYearBetween2010_2014 = flyear >= 2010 && flyear <=2014;
-				
-				int flightAirTime;
-				if(!flAirTimeStr.equals("")){
-					 flightAirTime = Integer.parseInt(flAirTimeStr);
-				} else {
-					flightAirTime = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.CRS_ELAPSED_TIME));
-				}
-				
-				int flightDistance;
 				if(!flDistStr.equals("")){
-					flightDistance = Integer.parseInt(flDistStr);
-				} else {
-					flightDistance = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DIV_DISTANCE));
+					int flyear = Integer.parseInt(flYearStr);
+					
+					double flightPrice = Double.parseDouble(flPriceStr);
+					int flightMonth = Integer.parseInt(flMonthStr);
+					boolean flightYearIs2015 = flyear == 2015;
+					boolean flightYearBetween2010_2014 = flyear >= 2010 && flyear <=2014;
+					
+					// TODO: mention in report n readme
+					int flightAirTime;
+					if(!flAirTimeStr.equals("")){
+						flightAirTime = Integer.parseInt(flAirTimeStr);
+					} else {
+						// This value is guaranteed to be present since it is checked in the sanity check
+						// Also, this is a better approximation of "time" with respect to the flight price
+						// since ticket price is not determined by actual elapsed time, but scheduled time
+						flightAirTime = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.CRS_ELAPSED_TIME));
+					}
+					
+					int flightDistance = Integer.parseInt(flDistStr);
+					
+					amv.setFromJava(flightPrice, flightMonth, flightYearIs2015, flightYearBetween2010_2014, flightAirTime, flightDistance);
+					
+					context.write(new Text(carKey), amv);
 				}
-				
-				amv.setFromJava(flightPrice, flightMonth, flightYearIs2015, flightYearBetween2010_2014, flightAirTime, flightDistance);
-				
-				context.write(new Text(carMonthKey), amv);
 			}
 		}
 	}
 	
-	public static class AirlineMedianReducer extends Reducer<Text, AirlineMapperValue, Text, Text> {
+	public static class AirlineLinearRegressionReducer extends Reducer<Text, AirlineMapperValue, Text, Text> {
 		
-		private HashMap<String, List<AirlineMapperValue>> carMapperOutput = new HashMap<String, List<AirlineMapperValue>>();
-		private HashSet<String> activeIn2015Set = new HashSet<String>();
+		private HashMap<String, ArrayList<AirlineMapperValue>> carsActiveIn2015Map = new HashMap<String, ArrayList<AirlineMapperValue>>();
 		
 		@Override
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
-			List<AirlineMapperValue> mapperList = new ArrayList<AirlineMapperValue>();
+			ArrayList<AirlineMapperValue> mapperList = new ArrayList<AirlineMapperValue>();
 			
-			String[] keyParts = key.toString().split(",");
-			String flcarrier = keyParts[0];
+			String flcarrier = key.toString();
 			
 			boolean is2015 = false;
 
 			for (AirlineMapperValue eachAMV : listOfAMVs){
-				mapperList.add(eachAMV);
+				mapperList.add(new AirlineMapperValue(eachAMV));
 				is2015 = eachAMV.getFlightYearIs2015().get() || is2015;
 			}
 			
-			// Maintain a set of carriers active in 2015
+			// If that carrier is active in 2015 (i.e. any flight has the flightYearIs2015 flag set)
 			if(is2015){
-				activeIn2015Set.add(flcarrier);
+				// Group all mapper value objects of one carrier together in one list
+				if(!carsActiveIn2015Map.containsKey(flcarrier)){
+					carsActiveIn2015Map.put(flcarrier,new ArrayList<AirlineMapperValue>());
+				}
+				carsActiveIn2015Map.get(flcarrier).addAll(mapperList);
 			}
-			
-			// Group all mapper value objects of one carrier from all months together in one list
-			if(!carMapperOutput.containsKey(flcarrier)){
-				carMapperOutput.put(flcarrier,new ArrayList<AirlineMapperValue>());
-			}
-			carMapperOutput.get(flcarrier).addAll(mapperList);
 		}
 
 		@Override
 		protected void cleanup(Context context) throws IOException, InterruptedException {
-			for(String carKey : carMapperOutput.keySet()){
-				if(activeIn2015Set.contains(carKey)){
-					List<AirlineMapperValue> listOfAMVs = carMapperOutput.get(carKey);
-					for(AirlineMapperValue amv : listOfAMVs){
-						if (amv.getFlightYearBetween2010_2014().get()){
-							
-							String linearRegressionValues = amv.getFlightAirTime().get() + "\t" +
-															amv.getFlightDistance().get() + "\t" +
-															amv.getFlightPrice().get();
-							
-							context.write(new Text(carKey), new Text(linearRegressionValues));
-						}
+			for(String carKey : carsActiveIn2015Map.keySet()){
+				List<AirlineMapperValue> listOfAMVs = carsActiveIn2015Map.get(carKey);
+				for(AirlineMapperValue amv : listOfAMVs){
+					if (amv.getFlightYearBetween2010_2014().get()){
+				
+						String linearRegressionValues = amv.getFlightAirTime().get() + "\t" +
+														amv.getFlightDistance().get() + "\t" +
+														amv.getFlightPrice().get();
+						context.write(new Text(carKey), new Text(linearRegressionValues));
 					}
 				}
 			}
@@ -268,14 +270,11 @@ public class LinearRegression {
 		private static final ArrayList<String> UNIQUE_CARRIERS = new ArrayList<String>(Arrays.asList(uc));
 
 		@Override
-		public int getPartition(Text carMonthKey, AirlineMapperValue amv, int numberOfReducers) {
-			String[] parts = carMonthKey.toString().split(",");
-			String carrier = parts[0];
-			return UNIQUE_CARRIERS.indexOf(carrier) % numberOfReducers;
+		public int getPartition(Text carKey, AirlineMapperValue amv, int numberOfReducers) {
+			return UNIQUE_CARRIERS.indexOf(carKey.toString()) % numberOfReducers;
 		}		
 	}
-	
-	
+		
 	public static void main(String[] args) throws Exception {
 
 		if(args.length != 3){
@@ -299,13 +298,18 @@ public class LinearRegression {
 		job.setJarByClass(LinearRegression.class);
 
 		job.setMapperClass(AirlineMapper.class);
-		job.setReducerClass(AirlineMedianReducer.class);
+		job.setReducerClass(AirlineLinearRegressionReducer.class);
 		
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(AirlineMapperValue.class);
 		
+		job.setPartitionerClass(AirlinePartitioner.class);
+		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(DoubleWritable.class);			
+		
+		job.setNumReduceTasks(17);
+		
 		
 		FileInputFormat.addInputPath(job, new Path(inputPath));
 		FileOutputFormat.setOutputPath(job, new Path(outputPath));
