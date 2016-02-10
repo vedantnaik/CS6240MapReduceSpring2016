@@ -176,14 +176,32 @@ public class LinearRegression {
 				
 				AirlineMapperValue amv = new AirlineMapperValue();
 		
-				int flyear = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.YEAR));
+				String flYearStr = FileRecord.getValueOf(fields, FileRecord.Field.YEAR); 
+				String flPriceStr = FileRecord.getValueOf(fields, FileRecord.Field.AVG_TICKET_PRICE);
+				String flMonthStr = FileRecord.getValueOf(fields, FileRecord.Field.MONTH); 
+				String flAirTimeStr = FileRecord.getValueOf(fields, FileRecord.Field.AIR_TIME);
+				String flDistStr = FileRecord.getValueOf(fields, FileRecord.Field.DISTANCE);
 				
-				double flightPrice = Double.parseDouble(FileRecord.getValueOf(fields, FileRecord.Field.AVG_TICKET_PRICE));
-				int flightMonth = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.MONTH));
+				int flyear = Integer.parseInt(flYearStr);
+				
+				double flightPrice = Double.parseDouble(flPriceStr);
+				int flightMonth = Integer.parseInt(flMonthStr);
 				boolean flightYearIs2015 = flyear == 2015;
 				boolean flightYearBetween2010_2014 = flyear >= 2010 && flyear <=2014;
-				int flightAirTime = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.AIR_TIME));
-				int flightDistance = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DISTANCE));
+				
+				int flightAirTime;
+				if(!flAirTimeStr.equals("")){
+					 flightAirTime = Integer.parseInt(flAirTimeStr);
+				} else {
+					flightAirTime = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.CRS_ELAPSED_TIME));
+				}
+				
+				int flightDistance;
+				if(!flDistStr.equals("")){
+					flightDistance = Integer.parseInt(flDistStr);
+				} else {
+					flightDistance = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DIV_DISTANCE));
+				}
 				
 				amv.setFromJava(flightPrice, flightMonth, flightYearIs2015, flightYearBetween2010_2014, flightAirTime, flightDistance);
 				
@@ -260,7 +278,7 @@ public class LinearRegression {
 	
 	public static void main(String[] args) throws Exception {
 
-		if(args.length != 4){
+		if(args.length != 3){
 			displayUsageAndExit();
 		}
 		
