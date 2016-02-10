@@ -35,60 +35,68 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class LinearRegression {
 
-	
-	
 	public static class AirlineMapperValue implements Writable {
 		DoubleWritable flightPrice;
 		IntWritable flightMonth;
 		BooleanWritable flightYearIs2015;
+		BooleanWritable flightYearBetween2010_2014;
 
-		public AirlineMapperValue(DoubleWritable flightPrice, BooleanWritable flightYearIs2015, IntWritable flightMonth) {
+		public AirlineMapperValue(DoubleWritable flightPrice, IntWritable flightMonth, BooleanWritable flightYearIs2015,
+				BooleanWritable flightYearBetween2010_2014) {
 			this.flightPrice = flightPrice;
-			this.flightYearIs2015 = flightYearIs2015;
 			this.flightMonth = flightMonth;
+			this.flightYearIs2015 = flightYearIs2015;
+			this.flightYearBetween2010_2014 = flightYearBetween2010_2014;
 		}
 
 		public AirlineMapperValue() {
 			flightPrice = new DoubleWritable();
-			flightYearIs2015 = new BooleanWritable();
 			flightMonth = new IntWritable();
+			flightYearIs2015 = new BooleanWritable();
+			flightYearBetween2010_2014 = new BooleanWritable();
 		}
 
-		void set(DoubleWritable flightPrice, BooleanWritable flightYearIs2015, IntWritable flightMonth) {
+		void set(DoubleWritable flightPrice, IntWritable flightMonth, BooleanWritable flightYearIs2015,
+				BooleanWritable flightYearBetween2010_2014) {
 			this.flightPrice = flightPrice;
-			this.flightYearIs2015 = flightYearIs2015;
 			this.flightMonth = flightMonth;
+			this.flightYearIs2015 = flightYearIs2015;
+			this.flightYearBetween2010_2014 = flightYearBetween2010_2014;
 		}
 		
-		void setFromJava(double flightPrice, boolean flightYearIs2015, int flightMonth) {
+		void setFromJava(double flightPrice, int flightMonth, boolean flightYearIs2015, boolean flightYearBetween2010_2014) {
 			this.flightPrice = new DoubleWritable(new Double(flightPrice));
-			this.flightYearIs2015 = new BooleanWritable(new Boolean(flightYearIs2015));
 			this.flightMonth = new IntWritable(new Integer(flightMonth));
+			this.flightYearIs2015 = new BooleanWritable(new Boolean(flightYearIs2015));
+			this.flightYearBetween2010_2014 = new BooleanWritable(new Boolean(flightYearBetween2010_2014));
 		}
 		
 		void combineFromAnother(AirlineMapperValue otheramv){
 			setFromJava(this.flightPrice.get() + otheramv.getFlightPrice().get(),
-						otheramv.getFlightYearIs2015().get() || this.flightYearIs2015.get(),
-						otheramv.getFlightMonth().get());
+					otheramv.getFlightMonth().get(),
+					otheramv.getFlightYearIs2015().get() || this.flightYearIs2015.get(),
+					otheramv.getFlightYearBetween2010_2014().get() || this.flightYearBetween2010_2014.get());
 		} 
 		
 		@Override
-		public void readFields(DataInput arg0) throws IOException {
-			flightPrice.readFields(arg0);
-			flightYearIs2015.readFields(arg0);
-			flightMonth.readFields(arg0);
+		public void readFields(DataInput inVal) throws IOException {
+			flightPrice.readFields(inVal);
+			flightMonth.readFields(inVal);
+			flightYearIs2015.readFields(inVal);
+			flightYearBetween2010_2014.readFields(inVal);
 		}
 
 		@Override
-		public void write(DataOutput arg0) throws IOException {
-			flightPrice.write(arg0);
-			flightYearIs2015.write(arg0);
-			flightMonth.write(arg0);
+		public void write(DataOutput outVal) throws IOException {
+			flightPrice.write(outVal);
+			flightMonth.write(outVal);
+			flightYearIs2015.write(outVal);
+			flightYearBetween2010_2014.write(outVal);
 		}
 
 		@Override
 		public String toString() {
-			return "[" + flightPrice.get() + " " + (flightYearIs2015.get() ? "TRUE" : "FALSE") + " " + flightMonth.get() + "]";
+			return "[" + flightPrice.get() + " " + flightMonth.get() + " " + (flightYearIs2015.get() ? "TRUE" : "FALSE") + " " + (flightYearBetween2010_2014.get() ? "TRUE" : "FALSE") + "]";
 		}
 
 		public DoubleWritable getFlightPrice() {
@@ -111,8 +119,16 @@ public class LinearRegression {
 			return flightYearIs2015;
 		}
 
-		public void setFlightYear(BooleanWritable flightYearIs2015) {
+		public void setFlightYearIs2015(BooleanWritable flightYearIs2015) {
 			this.flightYearIs2015 = flightYearIs2015;
+		}
+
+		public BooleanWritable getFlightYearBetween2010_2014() {
+			return flightYearBetween2010_2014;
+		}
+
+		public void setFlightYearBetween2010_2014(BooleanWritable flightYearBetween2010_2014) {
+			this.flightYearBetween2010_2014 = flightYearBetween2010_2014;
 		}
 
 	}
@@ -132,11 +148,14 @@ public class LinearRegression {
 				
 				AirlineMapperValue amv = new AirlineMapperValue();
 		
-				double flightPrice = Double.parseDouble(FileRecord.getValueOf(fields, FileRecord.Field.AVG_TICKET_PRICE));
-				boolean flightYearIs2015 = FileRecord.getValueOf(fields, FileRecord.Field.YEAR).equalsIgnoreCase("2015");
-				int flightMonth = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.MONTH));
+				int flyear = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.YEAR));
 				
-				amv.setFromJava(flightPrice, flightYearIs2015, flightMonth);
+				double flightPrice = Double.parseDouble(FileRecord.getValueOf(fields, FileRecord.Field.AVG_TICKET_PRICE));
+				int flightMonth = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.MONTH));
+				boolean flightYearIs2015 = flyear == 2015;
+				boolean flightYearBetween2010_2014 = flyear >= 2010 && flyear <=2014;
+						
+				amv.setFromJava(flightPrice, flightMonth, flightYearIs2015, flightYearBetween2010_2014);
 				
 				context.write(new Text(carMonthKey), amv);
 			}
@@ -144,6 +163,7 @@ public class LinearRegression {
 	}
 	
 	public static class AirlineMedianReducer extends Reducer<Text, AirlineMapperValue, Text, DoubleWritable> {
+		// TODO: Change class completely: AirlineLinearRegressionReducer
 		
 		private HashMap<String, List<Double>> appendedMapperOutput = new HashMap<String, List<Double>>();
 		private HashMap<String, Boolean> activeCarriersMap = new HashMap<String, Boolean>();
@@ -239,233 +259,6 @@ public class LinearRegression {
 		}
 	}
 	
-	public static class AirlineFastMedianReducer extends Reducer<Text, AirlineMapperValue, Text, DoubleWritable> {
-		
-		private HashMap<String, List<Double>> appendedMapperOutput = new HashMap<String, List<Double>>();
-		private HashMap<String, Boolean> activeCarriersMap = new HashMap<String, Boolean>();
-		private HashMap<String, Integer> flightCountMap = new HashMap<String, Integer>();
-		
-		@Override
-		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
-			List<Double> mapperList = new ArrayList<Double>();
-			
-			boolean is2015 = false;
-			
-			for (AirlineMapperValue eachAMV : listOfAMVs){
-				mapperList.add(eachAMV.getFlightPrice().get());
-				is2015 = eachAMV.getFlightYearIs2015().get() || is2015;
-			}
-			
-			appendedMapperOutput.put(key.toString(), mapperList);
-			activeCarriersMap.put(key.toString(), new Boolean(is2015));
-		}
-
-		@Override
-		protected void cleanup(Context context) throws IOException, InterruptedException {
-						
-			TreeMap<String, List<Double>> sortedAppendedMapperOutput = new TreeMap<String, List<Double>>();
-			for(String carMonthKey : appendedMapperOutput.keySet()){
-				sortedAppendedMapperOutput.put(carMonthKey, appendedMapperOutput.get(carMonthKey));
-				flightCountMap.put(carMonthKey, new Integer(appendedMapperOutput.get(carMonthKey).size()));
-			}
-			
-			ArrayList<String> top10Cars = listOfTop10Cars();
-			
-			for(String carMonthKey : sortedAppendedMapperOutput.keySet()){
-				List<Double> listOfPrices = sortedAppendedMapperOutput.get(carMonthKey);
-				
-				Double fastMedian = QuickSelect.quickSelect(listOfPrices, listOfPrices.size() / 2);
-				
-				String[] keySplit = carMonthKey.split(",");
-				String flcarrier = keySplit[0];
-				String flmonth = keySplit[1];
-				
-				String customKey = flmonth +"\t"+ flcarrier;
-				
-				if(top10Cars.contains(flcarrier)){
-					context.write(new Text(customKey),new DoubleWritable(fastMedian));
-				}
-			}
-		}
-		
-		private ArrayList<String> listOfTop10Cars() {
-			HashMap<String, Integer> carCountMap = new HashMap<String, Integer>();
-			
-			for(String carMonthKey : flightCountMap.keySet()){
-				String[] keySplit = carMonthKey.split(",");
-				String car = keySplit[0];
-				
-				if(!carCountMap.containsKey(car)){
-					carCountMap.put(car, 0);
-				}
-				
-				int count = carCountMap.get(car);
-				count += flightCountMap.get(carMonthKey);
-				carCountMap.put(car, count);
-			}
-			
-			ArrayList<Entry<String, Integer>> sortedCarCountList = new ArrayList<Entry<String, Integer>>(carCountMap.entrySet());
-			Collections.sort(sortedCarCountList, new Comparator<Map.Entry<String, Integer>>() {
-				public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-					return -(o2.getValue()).compareTo(o1.getValue());
-				}
-			});
-			
-			int t = 0;
-			ArrayList<String> listOfTop10 = new ArrayList<String>();
-			for(Entry<String, Integer> e : sortedCarCountList){
-				if(t == 10) break;
-				listOfTop10.add(e.getKey());
-				t += 1;
-			}
-			
-			return listOfTop10;
-		}
-		
-		/*
-		 * QuickSelect class
-		 * For sorting lists:
-		 * Referred from: Cory Hardman's Blog
-		 * 
-		 * http://www.coryhardman.com/2011/03/finding-median-in-almost-linear-time.html
-		 */
-		public static class QuickSelect {
-		    public static Double quickSelect(List <Double> values, int k)
-		    {
-		        int left = 0;
-		        int right = values.size() - 1;
-		        Random rand = new Random();
-		        while(true)
-		        {
-		            int partionIndex = rand.nextInt(right - left + 1) + left;
-		            int newIndex = partition(values, left, right, partionIndex);
-		            int q = newIndex - left + 1;
-		            if(k == q)
-		            {
-		                return values.get(newIndex);
-		            }
-		            else if(k < q)
-		            {
-		                right = newIndex - 1;
-		            }
-		            else
-		            {
-		                k -= q;
-		                left = newIndex + 1;
-		            }
-		        }
-		    }
-		    private static int partition(List <Double> values, int left, int right, int partitionIndex)
-		    {
-		        Double partionValue = values.get(partitionIndex);
-		        int newIndex = left;
-		        Double temp = values.get(partitionIndex);
-		        values.set(partitionIndex, values.get(right));
-		        values.set(right, temp);
-		        for(int i = left; i < right; i++)
-		        {
-		            if(values.get(i).compareTo(partionValue) < 0)
-		            {
-		                temp = values.get(i);
-		                values.set(i, values.get(newIndex));
-		                values.set(newIndex, temp);
-		                newIndex++;
-		            }
-		        }
-		        temp = values.get(right);
-		        values.set(right, values.get(newIndex));
-		        values.set(newIndex, temp);
-		        return newIndex;
-		    }
-		}
-		
-	}
-		
-	public static class AirlineMeanReducer extends Reducer<Text, AirlineMapperValue, Text, DoubleWritable> {
-		
-		private HashMap<String, AirlineMapperValue> addedMapperOutput = new HashMap<String, AirlineMapperValue>();
-		private HashMap<String, Integer> flightCountMap = new HashMap<String, Integer>();
-		
-		@Override
-		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
-			AirlineMapperValue amvForAll = new AirlineMapperValue();
-			amvForAll.setFromJava(0.0, false, 0);
-			
-			int count = 0;
-			
-			for (AirlineMapperValue eachAMV : listOfAMVs){
-				amvForAll.combineFromAnother(eachAMV);
-				count += 1;
-			}
-			
-			addedMapperOutput.put(key.toString(), amvForAll);
-			flightCountMap.put(key.toString(), new Integer(count));
-		}
-
-		@Override
-		protected void cleanup(Context context) throws IOException, InterruptedException {
-						
-			TreeMap<String, AirlineMapperValue> sortedAddedMapperOutput = new TreeMap<String, AirlineMapperValue>();
-			for(String carMonthKey : addedMapperOutput.keySet()){
-				sortedAddedMapperOutput.put(carMonthKey, addedMapperOutput.get(carMonthKey));
-			}
-			
-			ArrayList<String> top10Cars = listOfTop10Cars();
-			
-			for(String carMonthKey : sortedAddedMapperOutput.keySet()){
-				AirlineMapperValue amv = sortedAddedMapperOutput.get(carMonthKey);
-				double flightPrice = amv.getFlightPrice().get();
-				int flightCount = flightCountMap.get(carMonthKey).intValue();
-
-				double avgPrice = flightPrice/flightCount;
-				
-				String[] keySplit = carMonthKey.split(",");
-				String flcarrier = keySplit[0];
-				String flmonth = keySplit[1];
-				
-				String customKey = flmonth +"\t"+ flcarrier;
-				
-				if(top10Cars.contains(flcarrier)){
-					context.write(new Text(customKey), new DoubleWritable(avgPrice));
-				}
-			}
-		}
-
-		private ArrayList<String> listOfTop10Cars() {
-			HashMap<String, Integer> carCountMap = new HashMap<String, Integer>();
-			
-			for(String carMonthKey : flightCountMap.keySet()){
-				String[] keySplit = carMonthKey.split(",");
-				String car = keySplit[0];
-				
-				if(!carCountMap.containsKey(car)){
-					carCountMap.put(car, 0);
-				}
-				
-				int count = carCountMap.get(car);
-				count += flightCountMap.get(carMonthKey);
-				carCountMap.put(car, count);
-			}
-			
-			ArrayList<Entry<String, Integer>> sortedCarCountList = new ArrayList<Entry<String, Integer>>(carCountMap.entrySet());
-			Collections.sort(sortedCarCountList, new Comparator<Map.Entry<String, Integer>>() {
-				public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-					return -(o2.getValue()).compareTo(o1.getValue());
-				}
-			});
-			
-			int t = 0;
-			ArrayList<String> listOfTop10 = new ArrayList<String>();
-			for(Entry<String, Integer> e : sortedCarCountList){
-				if(t == 10) break;
-				listOfTop10.add(e.getKey());
-				t += 1;
-			}
-			
-			return listOfTop10;
-		}
-	}
-	
 	public static class AirlinePartitioner extends Partitioner<Text, AirlineMapperValue>{
 
 		private static final String[] uc = {"9E", "AA", "AS", "B6", "DL", "EV", "F9", "FL", "HA", 
@@ -487,72 +280,53 @@ public class LinearRegression {
 			displayUsageAndExit();
 		}
 		
-		String valueType = args[0];
-		String runType = args[1];
-		String inputPath = args[2];
-		String outputPath = args[3];
+		String runType = args[0];
+		String inputPath = args[1];
+		String outputPath = args[2];
 		
-		if(!(areParamsValid(valueType, runType))){
+		if(!(areParamsValid(runType))){
 			displayUsageAndExit();
 		}
 		
-		if (runType.equalsIgnoreCase("-s") || runType.equalsIgnoreCase("-mt")){
-			long startTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 
-//			MultiThreadComparison.main(args);
-			
-			String outputDest = "timeOutput/allTimes.csv";
-			printEndTime(startTime, valueType, runType, outputDest);
-		} else {
-			long startTime = System.currentTimeMillis();
+		Configuration conf = new Configuration();
+		
+		Job job = Job.getInstance(conf);
+		job.setJobName("LinearRegression");
+		job.setJarByClass(LinearRegression.class);
 
-			Configuration conf = new Configuration();
-			
-			Job job = Job.getInstance(conf);
-			job.setJobName("Comparisons");
-			job.setJarByClass(LinearRegression.class);
-
-			job.setMapperClass(AirlineMapper.class);
-			
-			switch(valueType){
-			case "-mean": 
-				job.setReducerClass(AirlineMeanReducer.class);
-				break;
-			case "-median": 
-				job.setReducerClass(AirlineMedianReducer.class);
-				break;
-			case "-fastMedian": 
-				job.setReducerClass(AirlineFastMedianReducer.class);
-				break;
+		job.setMapperClass(AirlineMapper.class);
+		job.setReducerClass(AirlineMedianReducer.class);
+		
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(AirlineMapperValue.class);
+		
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(DoubleWritable.class);			
+		
+		FileInputFormat.addInputPath(job, new Path(inputPath));
+		FileOutputFormat.setOutputPath(job, new Path(outputPath));
+		
+		// Wait for the MapReduce job to complete before exiting application
+		if(runType.equals("-pseudo")){
+			if(job.waitForCompletion(true)){
+				printEndTime(startTime, runType, System.getenv("HADOOP_HOME")+"/pseudo"+"Time.csv");
+				System.exit(0);
 			}
-
-			job.setMapOutputKeyClass(Text.class);
-			job.setMapOutputValueClass(AirlineMapperValue.class);
-			
-			job.setOutputKeyClass(Text.class);
-			job.setOutputValueClass(DoubleWritable.class);			
-			
-			FileInputFormat.addInputPath(job, new Path(inputPath));
-			FileOutputFormat.setOutputPath(job, new Path(outputPath));
-			
-			// Wait for the MapReduce job to complete before exiting application
-			if(runType.equals("-pseudo")){
-				if(job.waitForCompletion(true)){
-					printEndTime(startTime, valueType, runType, System.getenv("HADOOP_HOME")+"/pseudo"+valueType.substring(1)+"Time.csv");
-					System.exit(0);
-				}
-				System.exit(1);
-			}
-			System.exit(job.waitForCompletion(true) ? 0 : 1);
+			System.exit(1);
 		}
+		
+		// TODO: add time recording mechanism for EMR: Write file to S3
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 
-	private static void printEndTime(long startTime, String valueType, String runType, String outputDest) {
+	private static void printEndTime(long startTime, String runType, String outputDest) {
 		long endTime = System.currentTimeMillis();
 		long totalTime = (endTime - startTime) / 1000;
-		System.out.println("\nRun type: " + runType.substring(1) + " Value type: " + valueType.substring(1) + " took " + totalTime + " secs");
+		System.out.println("\nRun type: " + runType.substring(1) + " took " + totalTime + " secs");
 		
-		String lineToWrite = runType.substring(1) + "," + valueType.substring(1) + "," + totalTime;
+		String lineToWrite = runType.substring(1) + "," + totalTime;
 		
 		FileWriter writer;
 		try {
@@ -560,10 +334,10 @@ public class LinearRegression {
 			writer.append(lineToWrite+"\n");
 			writer.close();
 		} catch (FileNotFoundException e) {
-			System.err.println("Unable to write in timeOutput [file not found] " + valueType + " " + runType);
+			System.err.println("Unable to write in timeOutput [file not found] " + runType);
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
-			System.err.println("Unable to write in timeOutput [unsupported encoding] " + valueType + " " + runType);
+			System.err.println("Unable to write in timeOutput [unsupported encoding] " + runType);
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -573,29 +347,21 @@ public class LinearRegression {
 	private static void displayUsageAndExit() {
 		System.err.println("Invalid inputs given.");
 		System.err.println("USAGE:");
-		System.err.println("\narg 0:");
-		System.err.println("\t-mean\t\t:\tcalculate monthly mean");
-		System.err.println("\t-median\t\t:\tcalculate monthly median");
-		System.err.println("\t-fastMedain\t:\tcalculate monthly fast mean");
 		
-		System.err.println("\narg 1:");
-		System.err.println("\t-s\t\t:\trun in serial");
-		System.err.println("\t-mt\t\t:\trun in multi threaded");
+		System.err.println("\narg 0:");
 		System.err.println("\t-pseudo\t\t:\trun on a pseudo cluster");
 		System.err.println("\t-emr\t\t:\trun on amazon web services");
 		
-		System.err.println("\narg 2:");
+		System.err.println("\narg 1:");
 		System.err.println("\t<Path to input>");
 		
-		System.err.println("\narg 3:");
+		System.err.println("\narg 2:");
 		System.err.println("\t<Path to output>");
 		
 		System.exit(-1);
 	}
 
-	private static boolean areParamsValid(String valueType, String runType) {
-		return ((valueType.equalsIgnoreCase("-mean") || valueType.equalsIgnoreCase("-median") || valueType.equalsIgnoreCase("-fastMedian")) 
-				&& 
-				(runType.equalsIgnoreCase("-s") || runType.equalsIgnoreCase("-mt") || runType.equalsIgnoreCase("-pseudo") || runType.equalsIgnoreCase("-emr")));
+	private static boolean areParamsValid(String runType) {
+		return runType.equalsIgnoreCase("-pseudo") || runType.equalsIgnoreCase("-emr");
 	}
 }
