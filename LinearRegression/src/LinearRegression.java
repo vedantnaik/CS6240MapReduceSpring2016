@@ -7,6 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -26,6 +27,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -33,344 +35,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class LinearRegression {
 
-	public static class FileRecord{
-		class Field {
-			static final String CRS_ARR_TIME = "CRS_ARR_TIME";
-			static final String CRS_DEP_TIME = "CRS_DEP_TIME";
-			static final String CRS_ELAPSED_TIME = "CRS_ELAPSED_TIME";
-
-			static final String ORIGIN_AIRPORT_ID = "ORIGIN_AIRPORT_ID";
-			static final String ORIGIN_AIRPORT_SEQ_ID = "ORIGIN_AIRPORT_SEQ_ID";
-			static final String ORIGIN_CITY_MARKET_ID = "ORIGIN_CITY_MARKET_ID";
-			static final String ORIGIN_STATE_FIPS = "ORIGIN_STATE_FIPS";
-			static final String ORIGIN_WAC = "ORIGIN_WAC";
-			static final String DEST_AIRPORT_ID = "DEST_AIRPORT_ID";
-			static final String DEST_AIRPORT_SEQ_ID = "DEST_AIRPORT_SEQ_ID";
-			static final String DEST_CITY_MARKET_ID = "DEST_CITY_MARKET_ID";
-			static final String DEST_STATE_FIPS = "DEST_STATE_FIPS";
-			static final String DEST_WAC = "DEST_WAC";
-
-			static final String ORIGIN = "ORIGIN";
-			static final String ORIGIN_CITY_NAME = "ORIGIN_CITY_NAME";
-			static final String ORIGIN_STATE_ABR = "ORIGIN_STATE_ABR";
-			static final String ORIGIN_STATE_NM = "ORIGIN_STATE_NM";
-			static final String DEST = "DEST";
-			static final String DEST_CITY_NAME = "DEST_CITY_NAME";
-			static final String DEST_STATE_ABR = "DEST_STATE_ABR";
-			static final String DEST_STATE_NM = "DEST_STATE_NM";
-
-			static final String CANCELLED = "CANCELLED";
-
-			static final String ARR_TIME = "ARR_TIME";
-			static final String DEP_TIME = "DEP_TIME";
-			static final String ACTUAL_ELAPSED_TIME = "ACTUAL_ELAPSED_TIME";
-
-			static final String ARR_DELAY = "ARR_DELAY";
-			static final String ARR_DELAY_NEW = "ARR_DELAY_NEW";
-			static final String ARR_DEL15 = "ARR_DEL15";
-
-			static final String AVG_TICKET_PRICE = "AVG_TICKET_PRICE";
-
-			static final String FL_DATE = "FL_DATE";
-			static final String CARRIER = "CARRIER";
-			
-			static final String YEAR = "YEAR";
-			static final String MONTH = "MONTH";
-		}
-		
-		@SuppressWarnings("serial")
-		public static final ArrayList<String> csvHeaders = new ArrayList<String>() {
-		{add("YEAR");
-		add("QUARTER");
-		add("MONTH");
-		add("DAY_OF_MONTH");
-		add("DAY_OF_WEEK");
-		add("FL_DATE");
-		add("UNIQUE_CARRIER");
-		add("AIRLINE_ID");
-		add("CARRIER");
-		add("TAIL_NUM");
-		add("FL_NUM");
-		add("ORIGIN_AIRPORT_ID");
-		add("ORIGIN_AIRPORT_SEQ_ID");
-		add("ORIGIN_CITY_MARKET_ID");
-		add("ORIGIN");
-		add("ORIGIN_CITY_NAME");
-		add("ORIGIN_STATE_ABR");
-		add("ORIGIN_STATE_FIPS");
-		add("ORIGIN_STATE_NM");
-		add("ORIGIN_WAC");
-		add("DEST_AIRPORT_ID");
-		add("DEST_AIRPORT_SEQ_ID");
-		add("DEST_CITY_MARKET_ID");
-		add("DEST");
-		add("DEST_CITY_NAME");
-		add("DEST_STATE_ABR");
-		add("DEST_STATE_FIPS");
-		add("DEST_STATE_NM");
-		add("DEST_WAC");
-		add("CRS_DEP_TIME");
-		add("DEP_TIME");
-		add("DEP_DELAY");
-		add("DEP_DELAY_NEW");
-		add("DEP_DEL15");
-		add("DEP_DELAY_GROUP");
-		add("DEP_TIME_BLK");
-		add("TAXI_OUT");
-		add("WHEELS_OFF");
-		add("WHEELS_ON");
-		add("TAXI_IN");
-		add("CRS_ARR_TIME");
-		add("ARR_TIME");
-		add("ARR_DELAY");
-		add("ARR_DELAY_NEW");
-		add("ARR_DEL15");
-		add("ARR_DELAY_GROUP");
-		add("ARR_TIME_BLK");
-		add("CANCELLED");
-		add("CANCELLATION_CODE");
-		add("DIVERTED");
-		add("CRS_ELAPSED_TIME");
-		add("ACTUAL_ELAPSED_TIME");
-		add("AIR_TIME");
-		add("FLIGHTS");
-		add("DISTANCE");
-		add("DISTANCE_GROUP");
-		add("CARRIER_DELAY");
-		add("WEATHER_DELAY");
-		add("NAS_DELAY");
-		add("SECURITY_DELAY");
-		add("LATE_AIRCRAFT_DELAY");
-		add("FIRST_DEP_TIME");
-		add("TOTAL_ADD_GTIME");
-		add("LONGEST_ADD_GTIME");
-		add("DIV_AIRPORT_LANDINGS");
-		add("DIV_REACHED_DEST");
-		add("DIV_ACTUAL_ELAPSED_TIME");
-		add("DIV_ARR_DELAY");
-		add("DIV_DISTANCE");
-		add("DIV1_AIRPORT");
-		add("DIV1_AIRPORT_ID");
-		add("DIV1_AIRPORT_SEQ_ID");
-		add("DIV1_WHEELS_ON");
-		add("DIV1_TOTAL_GTIME");
-		add("DIV1_LONGEST_GTIME");
-		add("DIV1_WHEELS_OFF");
-		add("DIV1_TAIL_NUM");
-		add("DIV2_AIRPORT");
-		add("DIV2_AIRPORT_ID");
-		add("DIV2_AIRPORT_SEQ_ID");
-		add("DIV2_WHEELS_ON");
-		add("DIV2_TOTAL_GTIME");
-		add("DIV2_LONGEST_GTIME");
-		add("DIV2_WHEELS_OFF");
-		add("DIV2_TAIL_NUM");
-		add("DIV3_AIRPORT");
-		add("DIV3_AIRPORT_ID");
-		add("DIV3_AIRPORT_SEQ_ID");
-		add("DIV3_WHEELS_ON");
-		add("DIV3_TOTAL_GTIME");
-		add("DIV3_LONGEST_GTIME");
-		add("DIV3_WHEELS_OFF");
-		add("DIV3_TAIL_NUM");
-		add("DIV4_AIRPORT");
-		add("DIV4_AIRPORT_ID");
-		add("DIV4_AIRPORT_SEQ_ID");
-		add("DIV4_WHEELS_ON");
-		add("DIV4_TOTAL_GTIME");
-		add("DIV4_LONGEST_GTIME");
-		add("DIV4_WHEELS_OFF");
-		add("DIV4_TAIL_NUM");
-		add("DIV5_AIRPORT");
-		add("DIV5_AIRPORT_ID");
-		add("DIV5_AIRPORT_SEQ_ID");
-		add("DIV5_WHEELS_ON");
-		add("DIV5_TOTAL_GTIME");
-		add("DIV5_LONGEST_GTIME");
-		add("DIV5_WHEELS_OFF");
-		add("DIV5_TAIL_NUM");
-		add("AVG_TICKET_PRICE");}};
-		
-		private static String getValueOf(String[] fields, String headerName){
-			return fields[csvHeaders.indexOf(headerName)];
-		}
-		
-		private static boolean isRecordValid(String[] fields) {
-
-			float timeZone = 0;
-
-			// CRSArrTime and CRSDepTime should not be zero
-			// timeZone % 60 should be 0
-
-			SimpleDateFormat format = new SimpleDateFormat("HHmm");
-
-			String crsArrTime = fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)];
-			String crsDepTime = fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)];
-			String crsElapsedTime = fields[csvHeaders.indexOf(Field.CRS_ELAPSED_TIME)];
-
-			try {
-				Date CRSArrTime = (crsArrTime.equals("") ? null : format.parse(crsArrTime));
-				Date CRSDepTime = (crsDepTime.equals("") ? null : format.parse(crsDepTime));
-				float CRSElapsedTime = Float.parseFloat(crsElapsedTime);
-
-				float crsDiff = hhmmDiff(crsArrTime, crsDepTime);
-
-				timeZone = crsDiff - CRSElapsedTime;
-
-				if (CRSArrTime.getTime() == 0.0 || CRSDepTime.getTime() == 0.0)
-					return false;
-				if ((timeZone % 60) != 0)
-					return false;
-
-			} catch (NumberFormatException e) {
-				return false;
-			} catch (ParseException e) {
-				return false;
-			}
-
-			// AirportID, AirportSeqID, CityMarketID, StateFips, Wac should be
-			// larger than 0
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.ORIGIN_AIRPORT_ID)]) <= 0)
-				return false;
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.ORIGIN_AIRPORT_SEQ_ID)]) <= 0)
-				return false;
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.ORIGIN_CITY_MARKET_ID)]) <= 0)
-				return false;
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.ORIGIN_STATE_FIPS)]) <= 0)
-				return false;
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.ORIGIN_WAC)]) <= 0)
-				return false;
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.DEST_AIRPORT_ID)]) <= 0)
-				return false;
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.DEST_AIRPORT_SEQ_ID)]) <= 0)
-				return false;
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.DEST_CITY_MARKET_ID)]) <= 0)
-				return false;
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.DEST_STATE_FIPS)]) <= 0)
-				return false;
-
-			if (Integer.parseInt(fields[csvHeaders.indexOf(Field.DEST_WAC)]) <= 0)
-				return false;
-
-			// Origin, Destination, CityName, State, StateName should not be empty
-
-			if (fields[csvHeaders.indexOf(Field.ORIGIN)].equals(""))
-				return false;
-
-			if (fields[csvHeaders.indexOf(Field.ORIGIN_CITY_NAME)].equals(""))
-				return false;
-
-			if (fields[csvHeaders.indexOf(Field.ORIGIN_STATE_ABR)].equals(""))
-				return false;
-
-			if (fields[csvHeaders.indexOf(Field.ORIGIN_STATE_NM)].equals(""))
-				return false;
-
-			if (fields[csvHeaders.indexOf(Field.DEST)].equals(""))
-				return false;
-
-			if (fields[csvHeaders.indexOf(Field.DEST_CITY_NAME)].equals(""))
-				return false;
-
-			if (fields[csvHeaders.indexOf(Field.DEST_STATE_ABR)].equals(""))
-				return false;
-
-			if (fields[csvHeaders.indexOf(Field.DEST_STATE_NM)].equals(""))
-				return false;
-
-			// For flights that are not Cancelled:
-			int cancelledDigit = 0;
-			try{
-				cancelledDigit = Integer.parseInt(fields[csvHeaders.indexOf(Field.CANCELLED)]);
-			} catch (NumberFormatException e) {
-				cancelledDigit = 0;
-			}
-
-			if (cancelledDigit != 1) {
-				String arrTime = fields[csvHeaders.indexOf(Field.ARR_TIME)];
-				String depTime = fields[csvHeaders.indexOf(Field.DEP_TIME)];
-				String actElapsedTime = fields[csvHeaders.indexOf(Field.ACTUAL_ELAPSED_TIME)];
-				
-				try {
-					long actualElapsedTime = Long.parseLong(actElapsedTime);
-					long actualDiff = hhmmDiff(arrTime, depTime);
-
-					long actualTimeZone = actualDiff - actualElapsedTime;
-
-					long CRSElapsedTime = Long.parseLong(crsElapsedTime);
-					long crsDiff = hhmmDiff(crsArrTime, crsDepTime);
-					long newtimeZone = crsDiff - CRSElapsedTime;
-
-					if (actualTimeZone != newtimeZone) {
-						return false;
-					}
-
-					// if ArrDelay > 0 then ArrDelay should equal to ArrDelayMinutes
-					// if ArrDelay < 0 then ArrDelayMinutes should be zero
-					// if ArrDelayMinutes >= 15 then ArrDel15 should be false
-					float arrDelay = Float.parseFloat(fields[csvHeaders.indexOf(Field.ARR_DELAY)]);
-
-					float ArrDelayMinutes = Float.parseFloat(fields[csvHeaders.indexOf(Field.ARR_DELAY_NEW)]);
-
-					float arrDel15 = Float.parseFloat(fields[csvHeaders.indexOf(Field.ARR_DEL15)]);
-
-					if (arrDelay > 0.0) {
-						if (arrDelay != ArrDelayMinutes) {
-							return false;
-						}
-					}
-
-					if (arrDelay < 0.0) {
-						if (ArrDelayMinutes != 0) {
-							return false;
-						}
-					}
-
-					if (ArrDelayMinutes > 15.0) {
-						if (arrDel15 != 1) {
-							return false;
-						}
-					}
-
-				} catch (NumberFormatException e) {
-					// no entry found in record
-					// format does not match
-					return false;
-				}
-			}
-			// Given sanity checks complete
-
-			// Additional validations
-			if (Float.parseFloat(fields[csvHeaders.indexOf(Field.AVG_TICKET_PRICE)]) > 999999)
-				return false;
-
-			return true;
-		}
-
-		private static int hhmmDiff(String arr, String dep) {
-			int arrHH = Integer.parseInt(arr.substring(0, 2));
-			int arrMM = Integer.parseInt(arr.substring(2, 4));
-
-			int depHH = Integer.parseInt(dep.substring(0, 2));
-			int depMM = Integer.parseInt(dep.substring(2, 4));
-
-			if (Integer.parseInt(arr) > Integer.parseInt(dep)) {
-				return (arrHH - depHH) * 60 + (arrMM - depMM);
-			} else {
-				// Cross over 24hr
-				return (arrHH - depHH + 24) * 60 + (arrMM - depMM);
-			}
-		}
-	} 
+	
 	
 	public static class AirlineMapperValue implements Writable {
 		DoubleWritable flightPrice;
@@ -800,6 +465,21 @@ public class LinearRegression {
 			return listOfTop10;
 		}
 	}
+	
+	public static class AirlinePartitioner extends Partitioner<Text, AirlineMapperValue>{
+
+		private static final String[] uc = {"9E", "AA", "AS", "B6", "DL", "EV", "F9", "FL", "HA", 
+											"MQ", "NK", "OO", "UA", "US", "VX", "WN", "YV"}; 
+		private static final ArrayList<String> UNIQUE_CARRIERS = new ArrayList<String>(Arrays.asList(uc));
+
+		@Override
+		public int getPartition(Text carMonthKey, AirlineMapperValue amv, int numberOfReducers) {
+			String[] parts = carMonthKey.toString().split(",");
+			String carrier = parts[0];
+			return UNIQUE_CARRIERS.indexOf(carrier) % numberOfReducers;
+		}		
+	}
+	
 	
 	public static void main(String[] args) throws Exception {
 
