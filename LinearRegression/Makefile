@@ -25,50 +25,12 @@ jar:
 	javac -cp /usr/local/hadoop/share/hadoop/mapreduce/lib/hadoop-annotations-2.7.2.jar:/usr/local/hadoop/share/hadoop/common/hadoop-common-2.7.2.jar:/usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-client-core-2.7.2.jar *.java
 	jar cvf LinearRegression.jar *.class
 
-sequentialMean:
-	touch localOutput/mean_s.txt
-	java LinearRegression -mean -s all localOutput
-
-sequentialFastMedian:
-	touch localOutput/fastMedian_s.txt
-	java LinearRegression -fastMedian -s all localOutput
-
-sequentialMedian:
-	touch localOutput/median_s.txt
-	java LinearRegression -median -s all localOutput
-
-multiThreadMean:
-	touch localOutput/mean_mt.txt
-	java LinearRegression -mean -mt all localOutput
-
-multiThreadFastMedian:
-	touch localOutput/fastMedian_mt.txt
-	java LinearRegression -fastMedian -mt all localOutput
-
-multiThreadMedian:
-	touch localOutput/median_mt.txt
-	java LinearRegression -median -mt all localOutput
-
-pseudoMedian:
-	touch ${HADOOP_HOME}/pseudomedianTime.csv
-	hadoop jar LinearRegression.jar LinearRegression -median -pseudo input/all outputPseudoMedian
-	hadoop fs -get outputPseudoMedian .
-	cat ${HADOOP_HOME}/pseudomedianTime.csv >> timeOutput/allTime.csv
-	rm -f ${HADOOP_HOME}/pseudomedianTime.csv
-
-pseudoFastMedian:
-	touch ${HADOOP_HOME}/pseudofastMedianTime.csv
-	hadoop jar LinearRegression.jar LinearRegression -fastMedian -pseudo input/all outputPseudoFastMedian
-	hadoop fs -get outputPseudoFastMedian .
-	cat ${HADOOP_HOME}/pseudofastMedianTime.csv >> timeOutput/allTime.csv
-	rm -f ${HADOOP_HOME}/pseudofastMedianTime.csv
-
-pseudoMean:
-	touch ${HADOOP_HOME}/pseudomeanTime.csv
-	hadoop jar LinearRegression.jar LinearRegression -mean -pseudo input/all outputPseudoMean
-	hadoop fs -get outputPseudoMean .
-	cat ${HADOOP_HOME}/pseudomeanTime.csv >> timeOutput/allTime.csv
-	rm -f ${HADOOP_HOME}/pseudomeanTime.csv
+pseudoLR:
+	touch ${HADOOP_HOME}/pseudoTime.csv
+	hadoop jar LinearRegression.jar LinearRegression -pseudo input/all outputPseudo
+	hadoop fs -get outputPseudo .
+	cat ${HADOOP_HOME}/pseudoTime.csv >> timeOutput/allTime.csv
+	rm -f ${HADOOP_HOME}/pseudoTime.csv
 
 emr:
 	run.sh -mean -median -fastMean

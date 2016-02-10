@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -40,13 +41,17 @@ public class LinearRegression {
 		IntWritable flightMonth;
 		BooleanWritable flightYearIs2015;
 		BooleanWritable flightYearBetween2010_2014;
-
+		IntWritable flightAirTime;
+		IntWritable flightDistance;
+		
 		public AirlineMapperValue(DoubleWritable flightPrice, IntWritable flightMonth, BooleanWritable flightYearIs2015,
-				BooleanWritable flightYearBetween2010_2014) {
+				BooleanWritable flightYearBetween2010_2014, IntWritable flightAirTime, IntWritable flightDistance) {
 			this.flightPrice = flightPrice;
 			this.flightMonth = flightMonth;
 			this.flightYearIs2015 = flightYearIs2015;
 			this.flightYearBetween2010_2014 = flightYearBetween2010_2014;
+			this.flightAirTime = flightAirTime;
+			this.flightDistance = flightDistance;
 		}
 
 		public AirlineMapperValue() {
@@ -54,29 +59,28 @@ public class LinearRegression {
 			flightMonth = new IntWritable();
 			flightYearIs2015 = new BooleanWritable();
 			flightYearBetween2010_2014 = new BooleanWritable();
+			flightAirTime = new IntWritable();
+			flightDistance = new IntWritable();
 		}
 
 		void set(DoubleWritable flightPrice, IntWritable flightMonth, BooleanWritable flightYearIs2015,
-				BooleanWritable flightYearBetween2010_2014) {
+				BooleanWritable flightYearBetween2010_2014, IntWritable flightAirTime, IntWritable flightDistance) {
 			this.flightPrice = flightPrice;
 			this.flightMonth = flightMonth;
 			this.flightYearIs2015 = flightYearIs2015;
 			this.flightYearBetween2010_2014 = flightYearBetween2010_2014;
+			this.flightAirTime = flightAirTime;
+			this.flightDistance = flightDistance;
 		}
 		
-		void setFromJava(double flightPrice, int flightMonth, boolean flightYearIs2015, boolean flightYearBetween2010_2014) {
+		void setFromJava(double flightPrice, int flightMonth, boolean flightYearIs2015, boolean flightYearBetween2010_2014, int flightAirTime, int flightDistance) {
 			this.flightPrice = new DoubleWritable(new Double(flightPrice));
 			this.flightMonth = new IntWritable(new Integer(flightMonth));
 			this.flightYearIs2015 = new BooleanWritable(new Boolean(flightYearIs2015));
 			this.flightYearBetween2010_2014 = new BooleanWritable(new Boolean(flightYearBetween2010_2014));
+			this.flightAirTime = new IntWritable(new Integer(flightAirTime));
+			this.flightDistance = new IntWritable(new Integer(flightDistance));;
 		}
-		
-		void combineFromAnother(AirlineMapperValue otheramv){
-			setFromJava(this.flightPrice.get() + otheramv.getFlightPrice().get(),
-					otheramv.getFlightMonth().get(),
-					otheramv.getFlightYearIs2015().get() || this.flightYearIs2015.get(),
-					otheramv.getFlightYearBetween2010_2014().get() || this.flightYearBetween2010_2014.get());
-		} 
 		
 		@Override
 		public void readFields(DataInput inVal) throws IOException {
@@ -84,6 +88,8 @@ public class LinearRegression {
 			flightMonth.readFields(inVal);
 			flightYearIs2015.readFields(inVal);
 			flightYearBetween2010_2014.readFields(inVal);
+			flightAirTime.readFields(inVal);
+			flightDistance.readFields(inVal);
 		}
 
 		@Override
@@ -92,11 +98,18 @@ public class LinearRegression {
 			flightMonth.write(outVal);
 			flightYearIs2015.write(outVal);
 			flightYearBetween2010_2014.write(outVal);
+			flightAirTime.write(outVal);
+			flightDistance.write(outVal);
 		}
 
 		@Override
 		public String toString() {
-			return "[" + flightPrice.get() + " " + flightMonth.get() + " " + (flightYearIs2015.get() ? "TRUE" : "FALSE") + " " + (flightYearBetween2010_2014.get() ? "TRUE" : "FALSE") + "]";
+			return "[Price:" + flightPrice.get() + " " 
+					+ "Month:" + flightMonth.get() + " "
+					+ "Is2015:" + (flightYearIs2015.get() ? "TRUE" : "FALSE") + " "
+					+ "Between2010_2014:" + (flightYearBetween2010_2014.get() ? "TRUE" : "FALSE") + " "
+					+ "AirTime:" + flightAirTime.get() + " "
+					+ "Distance:"+ flightDistance.get() +"]";
 		}
 
 		public DoubleWritable getFlightPrice() {
@@ -131,6 +144,21 @@ public class LinearRegression {
 			this.flightYearBetween2010_2014 = flightYearBetween2010_2014;
 		}
 
+		public IntWritable getFlightAirTime() {
+			return flightAirTime;
+		}
+
+		public void setFlightAirTime(IntWritable flightAirTime) {
+			this.flightAirTime = flightAirTime;
+		}
+
+		public IntWritable getFlightDistance() {
+			return flightDistance;
+		}
+
+		public void setFlightDistance(IntWritable flightDistance) {
+			this.flightDistance = flightDistance;
+		}
 	}
 
 	public static class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue> {
@@ -154,108 +182,64 @@ public class LinearRegression {
 				int flightMonth = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.MONTH));
 				boolean flightYearIs2015 = flyear == 2015;
 				boolean flightYearBetween2010_2014 = flyear >= 2010 && flyear <=2014;
-						
-				amv.setFromJava(flightPrice, flightMonth, flightYearIs2015, flightYearBetween2010_2014);
+				int flightAirTime = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.AIR_TIME));
+				int flightDistance = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DISTANCE));
+				
+				amv.setFromJava(flightPrice, flightMonth, flightYearIs2015, flightYearBetween2010_2014, flightAirTime, flightDistance);
 				
 				context.write(new Text(carMonthKey), amv);
 			}
 		}
 	}
 	
-	public static class AirlineMedianReducer extends Reducer<Text, AirlineMapperValue, Text, DoubleWritable> {
-		// TODO: Change class completely: AirlineLinearRegressionReducer
+	public static class AirlineMedianReducer extends Reducer<Text, AirlineMapperValue, Text, Text> {
 		
-		private HashMap<String, List<Double>> appendedMapperOutput = new HashMap<String, List<Double>>();
-		private HashMap<String, Boolean> activeCarriersMap = new HashMap<String, Boolean>();
-		private HashMap<String, Integer> flightCountMap = new HashMap<String, Integer>();
+		private HashMap<String, List<AirlineMapperValue>> carMapperOutput = new HashMap<String, List<AirlineMapperValue>>();
+		private HashSet<String> activeIn2015Set = new HashSet<String>();
 		
 		@Override
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
-			List<Double> mapperList = new ArrayList<Double>();
+			List<AirlineMapperValue> mapperList = new ArrayList<AirlineMapperValue>();
+			
+			String[] keyParts = key.toString().split(",");
+			String flcarrier = keyParts[0];
 			
 			boolean is2015 = false;
-			
+
 			for (AirlineMapperValue eachAMV : listOfAMVs){
-				mapperList.add(eachAMV.getFlightPrice().get());
+				mapperList.add(eachAMV);
 				is2015 = eachAMV.getFlightYearIs2015().get() || is2015;
 			}
 			
-			appendedMapperOutput.put(key.toString(), mapperList);
-			activeCarriersMap.put(key.toString(), new Boolean(is2015));
+			// Maintain a set of carriers active in 2015
+			if(is2015){
+				activeIn2015Set.add(flcarrier);
+			}
+			
+			// Group all mapper value objects of one carrier from all months together in one list
+			if(!carMapperOutput.containsKey(flcarrier)){
+				carMapperOutput.put(flcarrier,new ArrayList<AirlineMapperValue>());
+			}
+			carMapperOutput.get(flcarrier).addAll(mapperList);
 		}
 
 		@Override
 		protected void cleanup(Context context) throws IOException, InterruptedException {
-						
-			TreeMap<String, List<Double>> sortedAppendedMapperOutput = new TreeMap<String, List<Double>>();
-			for(String carMonthKey : appendedMapperOutput.keySet()){
-				sortedAppendedMapperOutput.put(carMonthKey, appendedMapperOutput.get(carMonthKey));
-				flightCountMap.put(carMonthKey, new Integer(appendedMapperOutput.get(carMonthKey).size()));
-			}
-			
-			ArrayList<String> top10Cars = listOfTop10Cars();
-			
-			for(String carMonthKey : sortedAppendedMapperOutput.keySet()){
-				List<Double> listOfPrices = sortedAppendedMapperOutput.get(carMonthKey);
-				
-				Collections.sort(listOfPrices);
-				
-				Double fastMedian = getMedian(listOfPrices);
-				
-				String[] keySplit = carMonthKey.split(",");
-				String flcarrier = keySplit[0];
-				String flmonth = keySplit[1];
-				
-				String customKey = flmonth +"\t"+ flcarrier;
-				
-				if(top10Cars.contains(flcarrier)){
-					context.write(new Text(customKey),new DoubleWritable(fastMedian));
+			for(String carKey : carMapperOutput.keySet()){
+				if(activeIn2015Set.contains(carKey)){
+					List<AirlineMapperValue> listOfAMVs = carMapperOutput.get(carKey);
+					for(AirlineMapperValue amv : listOfAMVs){
+						if (amv.getFlightYearBetween2010_2014().get()){
+							
+							String linearRegressionValues = amv.getFlightAirTime().get() + "\t" +
+															amv.getFlightDistance().get() + "\t" +
+															amv.getFlightPrice().get();
+							
+							context.write(new Text(carKey), new Text(linearRegressionValues));
+						}
+					}
 				}
 			}
-		}
-
-		private Double getMedian(List<Double> listOfPrices) {
-			int len = listOfPrices.size();
-			int middle = len / 2;
-			if (len % 2 == 1) {
-				return listOfPrices.get(middle);
-			} else {
-				return (listOfPrices.get(middle - 1) + listOfPrices.get(middle)) / 2;
-			}
-		}
-		
-		private ArrayList<String> listOfTop10Cars() {
-			HashMap<String, Integer> carCountMap = new HashMap<String, Integer>();
-			
-			for(String carMonthKey : flightCountMap.keySet()){
-				String[] keySplit = carMonthKey.split(",");
-				String car = keySplit[0];
-				
-				if(!carCountMap.containsKey(car)){
-					carCountMap.put(car, 0);
-				}
-				
-				int count = carCountMap.get(car);
-				count += flightCountMap.get(carMonthKey);
-				carCountMap.put(car, count);
-			}
-			
-			ArrayList<Entry<String, Integer>> sortedCarCountList = new ArrayList<Entry<String, Integer>>(carCountMap.entrySet());
-			Collections.sort(sortedCarCountList, new Comparator<Map.Entry<String, Integer>>() {
-				public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-					return -(o2.getValue()).compareTo(o1.getValue());
-				}
-			});
-			
-			int t = 0;
-			ArrayList<String> listOfTop10 = new ArrayList<String>();
-			for(Entry<String, Integer> e : sortedCarCountList){
-				if(t == 10) break;
-				listOfTop10.add(e.getKey());
-				t += 1;
-			}
-			
-			return listOfTop10;
 		}
 	}
 	

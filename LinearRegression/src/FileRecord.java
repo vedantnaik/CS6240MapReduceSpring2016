@@ -47,6 +47,9 @@ public class FileRecord {
 
 		static final String YEAR = "YEAR";
 		static final String MONTH = "MONTH";
+		
+		static final String DISTANCE = "DISTANCE";
+		static final String AIR_TIME = "AIR_TIME";
 	}
 
 	public static final String[] csvh = { "YEAR", "QUARTER", "MONTH", "DAY_OF_MONTH", "DAY_OF_WEEK", "FL_DATE",
