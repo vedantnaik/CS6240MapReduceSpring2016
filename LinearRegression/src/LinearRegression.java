@@ -4,20 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.TreeMap;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -28,9 +15,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
@@ -221,60 +206,30 @@ public class LinearRegression {
 	
 	public static class AirlineLinearRegressionReducer extends Reducer<Text, AirlineMapperValue, Text, Text> {
 		
-		private HashMap<String, ArrayList<AirlineMapperValue>> carsActiveIn2015Map = new HashMap<String, ArrayList<AirlineMapperValue>>();
-		
 		@Override
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
-			ArrayList<AirlineMapperValue> mapperList = new ArrayList<AirlineMapperValue>();
-			
-			String flcarrier = key.toString();
-			
 			boolean is2015 = false;
 
+			ArrayList<AirlineMapperValue> carAMVList = new ArrayList<AirlineMapperValue>();
+			
+			// If the carrier is active in 2015 (i.e. any flight has the flightYearIs2015 flag set)
 			for (AirlineMapperValue eachAMV : listOfAMVs){
-				mapperList.add(new AirlineMapperValue(eachAMV));
+				carAMVList.add(new AirlineMapperValue(eachAMV));
 				is2015 = eachAMV.getFlightYearIs2015().get() || is2015;
 			}
 			
-			// If that carrier is active in 2015 (i.e. any flight has the flightYearIs2015 flag set)
-			if(is2015){
-				// Group all mapper value objects of one carrier together in one list
-				if(!carsActiveIn2015Map.containsKey(flcarrier)){
-					carsActiveIn2015Map.put(flcarrier,new ArrayList<AirlineMapperValue>());
-				}
-				carsActiveIn2015Map.get(flcarrier).addAll(mapperList);
-			}
-		}
-
-		@Override
-		protected void cleanup(Context context) throws IOException, InterruptedException {
-			for(String carKey : carsActiveIn2015Map.keySet()){
-				List<AirlineMapperValue> listOfAMVs = carsActiveIn2015Map.get(carKey);
-				for(AirlineMapperValue amv : listOfAMVs){
-					if (amv.getFlightYearBetween2010_2014().get()){
-				
-						String linearRegressionValues = amv.getFlightAirTime().get() + "\t" +
-														amv.getFlightDistance().get() + "\t" +
-														amv.getFlightPrice().get();
-						context.write(new Text(carKey), new Text(linearRegressionValues));
+			if(is2015){				
+				for (AirlineMapperValue eachAMV : carAMVList){				
+					// If this record is of flight between 2010-2014
+					if(eachAMV.getFlightYearBetween2010_2014().get()){
+						String lrCarrierOutput = eachAMV.getFlightDistance().get() + "\t" + eachAMV.getFlightAirTime().get() + "\t" + eachAMV.getFlightPrice().get(); 
+						context.write(key, new Text(lrCarrierOutput));
 					}
 				}
 			}
 		}
 	}
-	
-	public static class AirlinePartitioner extends Partitioner<Text, AirlineMapperValue>{
 
-		private static final String[] uc = {"9E", "AA", "AS", "B6", "DL", "EV", "F9", "FL", "HA", 
-											"MQ", "NK", "OO", "UA", "US", "VX", "WN", "YV"}; 
-		private static final ArrayList<String> UNIQUE_CARRIERS = new ArrayList<String>(Arrays.asList(uc));
-
-		@Override
-		public int getPartition(Text carKey, AirlineMapperValue amv, int numberOfReducers) {
-			return UNIQUE_CARRIERS.indexOf(carKey.toString()) % numberOfReducers;
-		}		
-	}
-		
 	public static void main(String[] args) throws Exception {
 
 		if(args.length != 3){
@@ -302,14 +257,9 @@ public class LinearRegression {
 		
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(AirlineMapperValue.class);
-		
-		job.setPartitionerClass(AirlinePartitioner.class);
-		
+				
 		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(DoubleWritable.class);			
-		
-		job.setNumReduceTasks(17);
-		
+		job.setOutputValueClass(Text.class);			
 		
 		FileInputFormat.addInputPath(job, new Path(inputPath));
 		FileOutputFormat.setOutputPath(job, new Path(outputPath));
