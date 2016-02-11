@@ -17,6 +17,11 @@ data <- bind_rows(partOutputs)
 # Set headers
 names(data) <- c("Carrier", "Distance", "Time", "AvgPrice")
 
+predValues <- data.frame()
+
+testDistVal <- median(date$Distance)
+testTimeVal <- median(data$Time)
+
 for(carrier in unique(data$Carrier)){
   dfForCarrier <- data[which(data$Carrier == carrier),]
   
@@ -36,6 +41,16 @@ for(carrier in unique(data$Carrier)){
                   lrTime$coefficients[2]))
   abline(lrTime, col='red')
   
-  
   dev.off()
+  
+  predDistancePrice = lrDistance$coefficients[1] + lrDistance$coefficients[2] * testDistVal
+  predTimePrice = lrTime$coefficients[1] + lrTime$coefficients[2] * testTimeVal
+  
+  carrier = carrier
+  
+  predValues <- rbind(predValues, c(carrier, predDistancePrice, predTimePrice))
 }
+
+names(predValues) <- c("Carrier", "DistPrice", "TimePrice")
+
+predValues
