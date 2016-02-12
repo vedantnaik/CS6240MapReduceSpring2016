@@ -11,7 +11,10 @@ System Requirements for getting the assignment to work:
 - Java 1.7
 - Hadoop 2.7.1+
 - RStudio
-- R packages (*** elaborate further ***)
+- R packages:
+	- dplyr
+	- ggplot2
+	- library(R.utils)
 - jq - a tool that allows us to grep the data that the AWS EMR cluster sends back
 - pandoc for R
 - LaTEX for your OS (These two packages are required to knit pdf through R)
@@ -38,8 +41,9 @@ Requirements to get the program to work on the local hadoop or pseudo mode:
 ---------------------------------------------------------------------------
 - Please ensure that the JAVA_HOME is pointing to the right location
 - Please ensure that the HADOOP_HOME is pointing to the right location
+- Give execution (chmod -R 777) to your HADOOP_HOME
 - Please ensure that the namenode, datanode are working prior to running the program - 'jps' is the command that will show you the running daemons
-- Please ensure that you have the input files in the correct format
+- Please ensure that you have the input files in the correct format in the folder titled 'all' in the same folder as the Makefile
 
 Details about the script that runs the job on AWS:
 --------------------------------------------------
@@ -52,14 +56,15 @@ Where do you have to plug in the configurations of your own system:
 - You will have to specify your bucket name on S3 in the script.cfg file.  The places are marked with <BUCKET_NAME>
 - You will have to plug in the paths into the Makefile, and the paths are labelled
 
-Details about the Makefile:
----------------------------
-- The Makefile requires you to edit your paths to get the program to run on the local pseudo mode
-
 Instructions to run the program on pseudo mode:
 -----------------------------------------------
-- run the 'make ***' command
-
+- make pseudo: 
+	- create the jar file using the java source
+	- upload input files from 'all' to the hdfs
+	- runs the jar
+	- pulls output from hdfs to the local folder "outputPseudo"
+	- runs the R markdown script to generate the report.  This step uses the output from the previous step
+	
 Instructions to run the program on AWS:
 ---------------------------------------
 - run the 'make cloud' command
@@ -72,7 +77,7 @@ Requirements for the R script:
 
 Details about the R script:
 ---------------------------
-*** elaborate further ***
+- explained in the report
 
 Reference output:
 -----------------
@@ -80,6 +85,7 @@ HA, EV, MQ, OO, US, B6, WN, UA, DL, NK, VX, AS, F9, AA
 (Of these, NK does not have any data in 2010-2014)
 
 The cheapest airline is:: 
+
 
 Conclusion:
 -----------
