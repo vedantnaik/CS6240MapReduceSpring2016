@@ -196,9 +196,10 @@ public class LinearRegression {
 					
 					int flightDistance = Integer.parseInt(flDistStr);
 					
-					amv.setFromJava(flightPrice, flightMonth, flightYearIs2015, flightYearBetween2010_2014, flightAirTime, flightDistance);
-					
-					context.write(new Text(carKey), amv);
+					if(flightYearIs2015 || flightYearBetween2010_2014){
+						amv.setFromJava(flightPrice, flightMonth, flightYearIs2015, flightYearBetween2010_2014, flightAirTime, flightDistance);
+						context.write(new Text(carKey), amv);
+					}
 				}
 			}
 		}
