@@ -1,0 +1,11 @@
+TODO for Assignment 4 : Linear Regression
+
+1. Complete the readme
+
+2. Complete the Makefile
+
+3. Check the paths in the Makefile
+
+4. Complete the rmd
+
+5. Add authorship to every module (*** IMPORTANT, needs to be added in the shell scripts as well ***)

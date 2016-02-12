@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# authors: Rohan Joshi, Vedant Naik
 # this file will contain all the paths that you need to plug into the job to get the s3 bucket to run
 # please plug your paths as indicated by the comments
 # if you need more information, please refer the readme
