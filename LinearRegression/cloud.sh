@@ -6,7 +6,7 @@
 
 #downloadpath="/Users/rohanjoshi/Documents/output_aws_lin"
 #bucketname="linearreg"
-
+# LEAVE THE downloadpath EMPTY if the path is relative, else completely give the path with the leading '/' 
 
 #echo $bucketname
 
@@ -26,4 +26,4 @@ fi
 # listing the contents in the bucket to see if the bucket name is correct
 # this command will also tell you if the CLI is configured correctly
 aws s3 ls s3://$bucketname
-sh jq-testl.sh $downloadpath $bucketname
+sh run_aws.sh $downloadpath $bucketname

@@ -44,8 +44,6 @@ eval job_id=`aws emr create-cluster --name "LIN-Cluster" --release-label emr-4.3
 
 echo "now removing the folder output_aws_lin"
 
-#rm -rf /Users/rohanjoshi/Documents/output_aws_lin
-
 echo $job_id
 echo "deleting the log directory in the S3 bucket"
 aws s3 rm s3://$bucketname/log --recursive
@@ -67,7 +65,8 @@ do
 		flag="False"
 	fi
 done
-aws s3 sync s3://$bucketname/output $locpath
+completepath="$downloadpathoutputAws"
+aws s3 sync s3://$bucketname/output $completepath
 
 echo "The job has terminated and all the output files downloaded..."
 echo "The folder where the part files are located is the downloadpath variable that you specified in the script.cfg file"
