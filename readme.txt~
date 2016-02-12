@@ -13,6 +13,8 @@ System Requirements for getting the assignment to work:
 - RStudio
 - R packages (*** elaborate further ***)
 - jq - a tool that allows us to grep the data that the AWS EMR cluster sends back
+- pandoc for R
+- LaTEX for your OS (These two packages are required to knit pdf through R)
 
 Path and variables that need to be set in order to get the project to compile and build successfully:
 ---------------------------------------------------------------------------------------------------
@@ -48,11 +50,11 @@ Where do you have to plug in the configurations of your own system:
 -------------------------------------------------------------------
 - You will have to specify the local path where the log and output files will be downloaded in the script.cfg file. The places are marked with <DOWNLOAD_PATH>
 - You will have to specify your bucket name on S3 in the script.cfg file.  The places are marked with <BUCKET_NAME>
-
+- You will have to plug in the paths into the Makefile, and the paths are labelled
 
 Details about the Makefile:
 ---------------------------
-*** elaborate further ***
+- The Makefile requires you to edit your paths to get the program to run on the local pseudo mode
 
 Instructions to run the program on pseudo mode:
 -----------------------------------------------
@@ -74,9 +76,10 @@ Details about the R script:
 
 Reference output:
 -----------------
+HA, EV, MQ, OO, US, B6, WN, UA, DL, NK, VX, AS, F9, AA
+(Of these, NK does not have any data in 2010-2014)
 
-Analysis:
----------
+The cheapest airline is:: 
 
 Conclusion:
 -----------
