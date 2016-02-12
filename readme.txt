@@ -13,6 +13,8 @@ System Requirements for getting the assignment to work:
 - RStudio
 - R packages (*** elaborate further ***)
 - jq - a tool that allows us to grep the data that the AWS EMR cluster sends back
+- panic for R
+- LaTEX for your OS (These two packages are required to knit pdf through R)
 
 Path and variables that need to be set in order to get the project to compile and build successfully:
 ---------------------------------------------------------------------------------------------------
