@@ -37,7 +37,7 @@ Requirements for the project to run successfully on AWS:
 - It is assumed that the reviewer will run the job on his own AWS account to prevent the exchange of keys
 - Please make sure that the output format for AWS CLI is set to 'json' before running the program in AWS mode
 - *** the download path for the folder where the script downloads the AWS output files is relative to the directory in which you extracted the project ***
-- please ensure that you are in the project directory when you run the commands
+- please ensure that you are in the project directory when you run the commands (i.e, you have cd)
 
 Requirements to get the program to work on the local hadoop or pseudo mode:
 ---------------------------------------------------------------------------
@@ -49,6 +49,8 @@ Requirements to get the program to work on the local hadoop or pseudo mode:
 
 Details about the script that runs the job on AWS:
 --------------------------------------------------
+- The bucket name on S3 needs to be unique.  If you get an error saying that the bucketname exists then please change the bucket name in the script.cfg file
+and try again
 - The script contains comments that make it easier to understand the code
 - There are respective commands that install the jq tool based on the OS you are using. Please uncomment the one that corresponds to your OS
 
@@ -73,7 +75,7 @@ Instructions to run the program on AWS:
 	- Using this bucket name, a new bucket will be created on AWS
 	- The input files from 'all' will be copied to the bucket/input/all folder
 	- The jar is then copied from the project folder into the S3 bucket
-	- The cluster is then started wiht the jar, input/all folder and the ouput is put into the bucket/output folder
+	- The cluster is then started with the jar, input/all folder and the output is put into the bucket/output folder
 	- The script keeps polling for the status, and when the status turns to 'TERMINATED', the output files from AWS are copied into outputAws
 
 Requirements for the R script:

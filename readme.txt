@@ -37,7 +37,7 @@ Requirements for the project to run successfully on AWS:
 - It is assumed that the reviewer will run the job on his own AWS account to prevent the exchange of keys
 - Please make sure that the output format for AWS CLI is set to 'json' before running the program in AWS mode
 - *** the download path for the folder where the script downloads the AWS output files is relative to the directory in which you extracted the project ***
-- please ensure that you are in the project directory when you run the commands
+- please ensure that you are in the project directory when you run the commands (i.e, you have cd)
 
 Requirements to get the program to work on the local hadoop or pseudo mode:
 ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ Instructions to run the program on AWS:
 	- Using this bucket name, a new bucket will be created on AWS
 	- The input files from 'all' will be copied to the bucket/input/all folder
 	- The jar is then copied from the project folder into the S3 bucket
-	- The cluster is then started wiht the jar, input/all folder and the ouput is put into the bucket/output folder
+	- The cluster is then started with the jar, input/all folder and the output is put into the bucket/output folder
 	- The script keeps polling for the status, and when the status turns to 'TERMINATED', the output files from AWS are copied into outputAws
 
 Requirements for the R script:
@@ -87,6 +87,21 @@ Requirements for the R script:
 Details about the R script:
 ---------------------------
 - explained in the report
+
+Error that can come up in R:
+----------------------------
+
+You should install a recommended TeX distribution for your platform:
+
+  Windows: MiKTeX (Complete) - http://miktex.org/2.9/setup
+    (NOTE: Be sure to download the Complete rather than Basic installation)
+    
+      Mac OS X: TexLive 2013 (Full) - http://tug.org/mactex/
+        (NOTE: Download with Safari rather than Chrome _strongly_ recommended)
+        
+          Linux: Use system package manager
+          
+- This requires LaTeX for Linux
 
 Reference output:
 -----------------
