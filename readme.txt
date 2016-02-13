@@ -36,6 +36,8 @@ Requirements for the project to run successfully on AWS:
 - The script that runs the job on AWS will show the progress, please make sure you have the terminal window open till the script completes
 - It is assumed that the reviewer will run the job on his own AWS account to prevent the exchange of keys
 - Please make sure that the output format for AWS CLI is set to 'json' before running the program in AWS mode
+- *** the download path for the folder where the script downloads the AWS output files is relative to the directory in which you extracted the project ***
+- please ensure that you are in the project directory when you run the commands
 
 Requirements to get the program to work on the local hadoop or pseudo mode:
 ---------------------------------------------------------------------------
@@ -54,7 +56,6 @@ Where do you have to plug in the configurations of your own system:
 -------------------------------------------------------------------
 - You will have to specify the local path where the log and output files will be downloaded in the script.cfg file. The places are marked with <DOWNLOAD_PATH>
 - You will have to specify your bucket name on S3 in the script.cfg file.  The places are marked with <BUCKET_NAME>
-- You will have to plug in the paths into the Makefile, and the paths are labelled
 
 Instructions to run the program on pseudo mode:
 -----------------------------------------------
@@ -68,6 +69,12 @@ Instructions to run the program on pseudo mode:
 Instructions to run the program on AWS:
 ---------------------------------------
 - run the 'make cloud' command
+	- The script pulls the bucketname from the script.cfg file
+	- Using this bucket name, a new bucket will be created on AWS
+	- The input files from 'all' will be copied to the bucket/input/all folder
+	- The jar is then copied from the project folder into the S3 bucket
+	- The cluster is then started wiht the jar, input/all folder and the ouput is put into the bucket/output folder
+	- The script keeps polling for the status, and when the status turns to 'TERMINATED', the output files from AWS are copied into outputAws
 
 Requirements for the R script:
 ------------------------------
@@ -85,8 +92,10 @@ HA, EV, MQ, OO, US, B6, WN, UA, DL, NK, VX, AS, F9, AA
 (Of these, NK does not have any data in 2010-2014)
 
 The cheapest airline is:: 
-
+F9
 
 Conclusion:
 -----------
-
+- We are using MSE to determine the best fit. In this case, the time variable has a better linear regression model. Hence, we use this to predict prices
+of all carriers. We are predicting based on the mean value of time from the entire dataset(here, 111.05). Of all the predicted prices(for all carriers) 
+F9 gives the cheapest predicted price. Hence, F9 is the cheapest.
