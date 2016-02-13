@@ -49,6 +49,8 @@ Requirements to get the program to work on the local hadoop or pseudo mode:
 
 Details about the script that runs the job on AWS:
 --------------------------------------------------
+- The bucket name on S3 needs to be unique.  If you get an error saying that the bucketname exists then please change the bucket name in the script.cfg file
+and try again
 - The script contains comments that make it easier to understand the code
 - There are respective commands that install the jq tool based on the OS you are using. Please uncomment the one that corresponds to your OS
 

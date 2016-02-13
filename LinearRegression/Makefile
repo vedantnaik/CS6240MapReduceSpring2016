@@ -33,7 +33,7 @@ pseudoLR:
 	rm -f ${HADOOP_HOME}/pseudoTime.csv
 
 emr:
-	run.sh -mean -median -fastMean
+	./cloud.sh
 
 clearhadoop:
 	hadoop fs -rm -r /user/vedant
