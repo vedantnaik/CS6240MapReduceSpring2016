@@ -88,6 +88,21 @@ Details about the R script:
 ---------------------------
 - explained in the report
 
+Error that can come up in R:
+----------------------------
+
+You should install a recommended TeX distribution for your platform:
+
+  Windows: MiKTeX (Complete) - http://miktex.org/2.9/setup
+    (NOTE: Be sure to download the Complete rather than Basic installation)
+    
+      Mac OS X: TexLive 2013 (Full) - http://tug.org/mactex/
+        (NOTE: Download with Safari rather than Chrome _strongly_ recommended)
+        
+          Linux: Use system package manager
+          
+- This requires LaTeX for Linux
+
 Reference output:
 -----------------
 HA, EV, MQ, OO, US, B6, WN, UA, DL, NK, VX, AS, F9, AA
