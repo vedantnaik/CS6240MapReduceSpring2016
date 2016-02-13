@@ -70,7 +70,7 @@ Instructions to run the program on pseudo mode:
 	
 Instructions to run the program on AWS:
 ---------------------------------------
-- run the 'make cloud' command
+- run the 'make emr' command
 	- The script pulls the bucketname from the script.cfg file
 	- Using this bucket name, a new bucket will be created on AWS
 	- The input files from 'all' will be copied to the bucket/input/all folder

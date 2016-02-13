@@ -116,3 +116,4 @@ Conclusion:
 - We are using MSE to determine the best fit. In this case, the time variable has a better linear regression model. Hence, we use this to predict prices
 of all carriers. We are predicting based on the mean value of time from the entire dataset(here, 111.05). Of all the predicted prices(for all carriers) 
 F9 gives the cheapest predicted price. Hence, F9 is the cheapest.
+The MSE for most of the carriers is lesser for time variable compared to the distance variable
