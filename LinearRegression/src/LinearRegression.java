@@ -274,7 +274,6 @@ public class LinearRegression {
 			System.exit(1);
 		}
 		
-		// TODO: add time recording mechanism for EMR: Write file to S3
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 
