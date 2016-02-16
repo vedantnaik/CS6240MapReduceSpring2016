@@ -1,0 +1,191 @@
+---
+Assignment 4: Linear Regression
+Team Members: Vedant Naik, Rohan Joshi
+output: html_document
+---
+
+### Assignment 4: Linear Regression
+## Team Members: Vedant Naik, Rohan Joshi
+
+#Problem Statement:
+The price of a ticket depends, in part, on the amount of fuel consumed in the particular itinerary (a factor of distance and winds). Furthermore, prices have a tendency to increase over time. To understand airline pricing, computer a simple linear regression that models the cost of tickets for different airlines. Give a new ranking of airlines with respect to price.
+
+The output of the Map-Reduce program is used as an input for this report.
+
+# Airlines active in 2015
+
+HA, EV, MQ, OO, US, B6, WN, UA, DL, NK, VX, AS, F9, AA
+(Of these, NK does not have any data in 2010-2014)
+
+# Graphs showing a linear fit of the variable to price for each airline
+
+```{r fig.height=8, fig.width=8, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
+
+require(dplyr)
+require(ggplot2)
+library(R.utils)
+
+# Read data folder name from command line arguments
+args <- commandArgs(trailingOnly = TRUE)
+outputFolder <- args[1]
+
+files <- dir(outputFolder, pattern='part-r-', full.names = TRUE)
+partOutputs <- lapply(files, read.csv, header=FALSE, sep="\t")
+data <- bind_rows(partOutputs)
+# Set headers
+names(data) <- c("Carrier", "Distance", "Time", "AvgPrice")
+
+mseDistanceLowerCount <- 0
+mseTimeLowerCount <- 0
+
+timePredMap <- new.env(hash = T, parent = emptyenv())
+timePredFor <- mean(data$Time)
+
+distancePredMap <- new.env(hash = T, parent = emptyenv())
+distancePredFor <- mean(data$Distance)
+
+for(carrier in unique(data$Carrier)){
+  dfForCarrier <- data[which(data$Carrier == carrier),]
+  
+  lrDistance <- lm(dfForCarrier$AvgPrice ~ dfForCarrier$Distance)
+  summaryDistance <- summary(lrDistance)
+  mseDistance <- mean(summaryDistance$residuals^2)
+  
+  lrTime <- lm(dfForCarrier$AvgPrice ~ dfForCarrier$Time)
+  summaryTime <- summary(lrTime)
+  mseTime <- mean(summaryTime$residuals^2)
+  
+  if(mseTime > mseDistance){
+    mseDistanceLowerCount <- mseDistanceLowerCount + 1
+  } else {
+    mseTimeLowerCount <- mseTimeLowerCount + 1
+  }
+  
+  par(mfrow = c(2,1))
+  
+  plot(dfForCarrier$Distance, dfForCarrier$AvgPrice,ylab="Average Ticket Price",
+      xlab=paste(carrier, " Distance Plot -","Intercept :", lrDistance$coefficients[[1]], 
+                 "  Slope: ", lrDistance$coefficients[[2]], "MSE:", mseDistance))
+  abline(lrDistance, col='green')
+  
+  plot(dfForCarrier$Time, dfForCarrier$AvgPrice,ylab="Average Ticket Price",
+       xlab=paste(carrier, " Time Plot -","Intercept :", lrTime$coefficients[[1]], 
+                  "  Slope: ", lrTime$coefficients[[2]], "MSE:", mseTime))
+  abline(lrTime, col='red')
+  
+  timePredVal <- lrTime$coefficients[[2]]*timePredFor +  lrTime$coefficients[[1]]
+  timePredMap[[carrier]] <- timePredVal
+
+  distancePredVal <- lrDistance$coefficients[[2]]*distancePredFor +  lrDistance$coefficients[[1]]
+  distancePredMap[[carrier]] <- distancePredVal
+}
+
+carName <- "xx"
+minPrice <- 999999
+
+finalResultList <- c()
+
+if(mseTimeLowerCount > mseDistanceLowerCount){
+  # get best price from TIME
+  for(uc in unique(data$Carrier)){
+    if(timePredMap[[uc]] < minPrice){
+      carName <- uc
+      minPrice <- timePredMap[[uc]]
+    }
+    
+    finalResultList <- c(finalResultList, paste(timePredMap[[uc]],sep = ",",uc))
+  }
+  
+} else {
+  # get best price from DISTANCE
+  for(uc in unique(data$Carrier)){
+    if(distancePredMap[[uc]] < minPrice){
+      carName <- uc
+      minPrice <- distancePredMap[[uc]]
+    }  
+  }
+  
+  finalResultList <- c(finalResultList, paste(distancePredMap[[uc]],sep = ",",uc))
+}
+
+
+finalResultList <- sort(finalResultList)
+finalResultList <- paste(finalResultList, sep = ",", rank(finalResultList))
+
+
+cat("Cheapest carrier : ", carName)
+
+```
+
+
+
+# Is distance traveled or flight time a better variable?
+
+In order to decide which model is better for this dataset, we compare the MSE (Mean Square Error) values of each model, for each carrier.
+Of all the carriers seen so far `r mseTimeLowerCount` carriers have better fit for time. And `r mseDistanceLowerCount` have a better fit for
+Distance.
+
+MSE values can be calculated as follows:
+```
+# lrDistance <- lm(dfForCarrier$AvgPrice ~ dfForCarrier$Distance)
+# summaryDistance <- summary(lrDistance)
+# mseDistance <- mean(summaryDistance$residuals^2)
+
+# lrTime <- lm(dfForCarrier$AvgPrice ~ dfForCarrier$Time)
+# summaryTime <- summary(lrTime)
+# mseTime <- mean(summaryTime$residuals^2)
+```
+
+We maintain a count for each variable, and increment it when the MSE for that is lower, as we iterate through all carriers
+```
+#  if(mseTime > mseDistance){
+#    mseDistanceLowerCount <- mseDistanceLowerCount + 1
+#  } else {
+#    mseTimeLowerCount <- mseTimeLowerCount + 1
+#  }
+```
+
+Thus we conclude the linear regression model for time has a better fit over the given data. 
+
+# Cheapest Airline
+
+We can use the time variable to find the cheapest airline.
+Using the LR Model for time, we can get an estimated ticket prices for each airline. (Explained in detail in Analysis.)
+
+`r cat("Cheapest carrier : ", carName) `
+
+# ANALYSIS
+
+We used the MSE to dertermine the best fit. In most of the cases (for most of the carriers) in this dataset, time variable gives a better fit. To automate the process of identifying which of the two variables are better, we used a naive approach of counting the lower MSEs for each carrier. (Discussed earlier.)
+
+Once the better variable was identified, we need to find which airline is the cheapest.
+For this, we used the mean value of Time, from the enitre dataset. Here, `r timePredFor`. Using this value, we predict the price for each carrier using the Linear Regression model for time.
+
+```
+# timePredVal <- lrTime$coefficients[[2]]*timePredFor +  lrTime$coefficients[[1]]
+```
+The slope is obainted from lrTime    $coefficients[[2]], and intercept from lrTime    $coefficients[[1]]
+
+We store the timePredVal for each carrier in a map. Later, using this map, we find the cheapest airline, and rankings for each airline.
+
+# Output:
+
+The cheapest airline in this dataset: `r carName`
+
+The rakings are given:
+```{r}
+for (x in strsplit(finalResultList, ",")) {
+  print(paste(x[2],x[3]))
+}
+```
+
+
+# Conclusion:
+
+We are using MSE to determine the best fit. In this case, the time variable has a better linear regression model. Hence, we use this to predict prices
+of all carriers. We are predicting based on the mean value of time from the entire dataset(here, 111.05). Of all the predicted prices(for all carriers)
+F9 gives the cheapest predicted price. Hence, F9 is the cheapest.
+
+## References:
+For calculating MSE using summary of model given by lm.
+http://stats.stackexchange.com/questions/107643/how-to-get-the-value-of-mean-squared-error-in-a-linear-regression-in-r
