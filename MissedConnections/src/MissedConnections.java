@@ -25,6 +25,10 @@ public class MissedConnections {
 
 	/*
 	 * A connection is any pair of flight F and G of the same carrier such as F.Destination = G.Origin 
+	 * 
+	 * 	flt F	--->	SomeAirport		---> flt G
+	 * 										G leaves 30mins-6hours after F arrives
+	 * 
 	 * and the scheduled departure of G is <= 6 hours and >= 30 minutes after the scheduled arrival of F.
 	 * 
 	 * A connection is missed when the actual arrival of F < 30 minutes before the actual departure of G.
@@ -33,8 +37,8 @@ public class MissedConnections {
 	 * 
 	 * Output of mapper:
 	 * 	Key	:	we want flights of the same carrier and same day
-	 * 			so we propose a key like this
-	 * 			<CARRIER>,<DATE>
+	 * 			so we propose a key like this	(hyphen separated)
+	 * 			<CARRIER>-<DATE>
 	 * 
 	 * Since this will lead to a lot of keys, we could have a partitioner that sends dates of same carriers 
 	 * to the same Reducer. I.E. based on <CARRIER>
@@ -48,136 +52,109 @@ public class MissedConnections {
 	 * */
 	
 	public static class AirlineMapperValue implements Writable {
-		DoubleWritable flightPrice;
-		IntWritable flightMonth;
-		BooleanWritable flightYearIs2015;
-		BooleanWritable flightYearBetween2010_2014;
-		IntWritable flightAirTime;
-		IntWritable flightDistance;
 		
-		public AirlineMapperValue(DoubleWritable flightPrice, IntWritable flightMonth, BooleanWritable flightYearIs2015,
-				BooleanWritable flightYearBetween2010_2014, IntWritable flightAirTime, IntWritable flightDistance) {
-			this.flightPrice = flightPrice;
-			this.flightMonth = flightMonth;
-			this.flightYearIs2015 = flightYearIs2015;
-			this.flightYearBetween2010_2014 = flightYearBetween2010_2014;
-			this.flightAirTime = flightAirTime;
-			this.flightDistance = flightDistance;
-		}
-
-		public AirlineMapperValue() {
-			flightPrice = new DoubleWritable();
-			flightMonth = new IntWritable();
-			flightYearIs2015 = new BooleanWritable();
-			flightYearBetween2010_2014 = new BooleanWritable();
-			flightAirTime = new IntWritable();
-			flightDistance = new IntWritable();
-		}
-
-		public AirlineMapperValue(AirlineMapperValue anotherAMV) {
-			this.flightPrice = new DoubleWritable(anotherAMV.getFlightPrice().get());
-			this.flightMonth = new IntWritable(anotherAMV.getFlightMonth().get());
-			this.flightYearIs2015 = new BooleanWritable(anotherAMV.getFlightYearIs2015().get());
-			this.flightYearBetween2010_2014 = new BooleanWritable(anotherAMV.getFlightYearBetween2010_2014().get());
-			this.flightAirTime = new IntWritable(anotherAMV.getFlightAirTime().get());
-			this.flightDistance = new IntWritable(anotherAMV.getFlightDistance().get());
-		}
-
-		void set(DoubleWritable flightPrice, IntWritable flightMonth, BooleanWritable flightYearIs2015,
-				BooleanWritable flightYearBetween2010_2014, IntWritable flightAirTime, IntWritable flightDistance) {
-			this.flightPrice = flightPrice;
-			this.flightMonth = flightMonth;
-			this.flightYearIs2015 = flightYearIs2015;
-			this.flightYearBetween2010_2014 = flightYearBetween2010_2014;
-			this.flightAirTime = flightAirTime;
-			this.flightDistance = flightDistance;
+		Text origin;
+		Text destination;
+		Text crsArrTime;
+		Text crsDepTime;
+		Text actualArrTime;
+		Text actualDepTime;
+		
+		public AirlineMapperValue(Text origin, Text destination, Text crsArrTime, Text crsDepTime,
+				Text actualArrTime, Text actualDepTime) {
+			this.origin = origin;
+			this.destination = destination;
+			this.crsArrTime = crsArrTime;
+			this.crsDepTime = crsDepTime;
+			this.actualArrTime = actualArrTime;
+			this.actualDepTime = actualDepTime;
 		}
 		
-		void setFromJava(double flightPrice, int flightMonth, boolean flightYearIs2015, boolean flightYearBetween2010_2014, int flightAirTime, int flightDistance) {
-			this.flightPrice = new DoubleWritable(new Double(flightPrice));
-			this.flightMonth = new IntWritable(new Integer(flightMonth));
-			this.flightYearIs2015 = new BooleanWritable(new Boolean(flightYearIs2015));
-			this.flightYearBetween2010_2014 = new BooleanWritable(new Boolean(flightYearBetween2010_2014));
-			this.flightAirTime = new IntWritable(new Integer(flightAirTime));
-			this.flightDistance = new IntWritable(new Integer(flightDistance));;
+		public AirlineMapperValue(AirlineMapperValue amv) {
+			this.origin = amv.getOrigin();
+			this.destination = amv.getDestination();
+			this.crsArrTime = amv.getCrsArrTime();
+			this.crsDepTime = amv.getCrsDepTime();
+			this.actualArrTime = amv.getActualArrTime();
+			this.actualDepTime = amv.getActualDepTime();
 		}
 		
 		@Override
 		public void readFields(DataInput inVal) throws IOException {
-			flightPrice.readFields(inVal);
-			flightMonth.readFields(inVal);
-			flightYearIs2015.readFields(inVal);
-			flightYearBetween2010_2014.readFields(inVal);
-			flightAirTime.readFields(inVal);
-			flightDistance.readFields(inVal);
+			origin.readFields(inVal);
+			destination.readFields(inVal);
+			crsArrTime.readFields(inVal);
+			crsDepTime.readFields(inVal);
+			actualArrTime.readFields(inVal);
+			actualDepTime.readFields(inVal);
 		}
 
 		@Override
 		public void write(DataOutput outVal) throws IOException {
-			flightPrice.write(outVal);
-			flightMonth.write(outVal);
-			flightYearIs2015.write(outVal);
-			flightYearBetween2010_2014.write(outVal);
-			flightAirTime.write(outVal);
-			flightDistance.write(outVal);
+			origin.write(outVal);
+			destination.write(outVal);
+			crsArrTime.write(outVal);
+			crsDepTime.write(outVal);
+			actualArrTime.write(outVal);
+			actualDepTime.write(outVal);
 		}
 
 		@Override
 		public String toString() {
-			return "[Price:" + flightPrice.get() + " " 
-					+ "Month:" + flightMonth.get() + " "
-					+ "Is2015:" + (flightYearIs2015.get() ? "TRUE" : "FALSE") + " "
-					+ "Between2010_2014:" + (flightYearBetween2010_2014.get() ? "TRUE" : "FALSE") + " "
-					+ "AirTime:" + flightAirTime.get() + " "
-					+ "Distance:"+ flightDistance.get() +"]";
+			return "[Origin:" + origin.toString() + " " 
+					+ "Dest:" + destination.toString() + " "
+					+ "crsArr:" + crsArrTime.toString() + " "
+					+ "crsDep:" + crsDepTime.toString() + " "
+					+ "actualArr:" + actualArrTime.toString() + " "
+					+ "actualDep:"+ actualDepTime.toString() +"]";
 		}
 
-		public DoubleWritable getFlightPrice() {
-			return flightPrice;
+		public Text getOrigin() {
+			return origin;
 		}
 
-		public void setFlightPrice(DoubleWritable flightPrice) {
-			this.flightPrice = flightPrice;
+		public void setOrigin(Text origin) {
+			this.origin = origin;
 		}
 
-		public IntWritable getFlightMonth() {
-			return flightMonth;
+		public Text getDestination() {
+			return destination;
 		}
 
-		public void setFlightMonth(IntWritable flightMonth) {
-			this.flightMonth = flightMonth;
+		public void setDestination(Text destination) {
+			this.destination = destination;
 		}
 
-		public BooleanWritable getFlightYearIs2015() {
-			return flightYearIs2015;
+		public Text getCrsArrTime() {
+			return crsArrTime;
 		}
 
-		public void setFlightYearIs2015(BooleanWritable flightYearIs2015) {
-			this.flightYearIs2015 = flightYearIs2015;
+		public void setCrsArrTime(Text crsArrTime) {
+			this.crsArrTime = crsArrTime;
 		}
 
-		public BooleanWritable getFlightYearBetween2010_2014() {
-			return flightYearBetween2010_2014;
+		public Text getCrsDepTime() {
+			return crsDepTime;
 		}
 
-		public void setFlightYearBetween2010_2014(BooleanWritable flightYearBetween2010_2014) {
-			this.flightYearBetween2010_2014 = flightYearBetween2010_2014;
+		public void setCrsDepTime(Text crsDepTime) {
+			this.crsDepTime = crsDepTime;
 		}
 
-		public IntWritable getFlightAirTime() {
-			return flightAirTime;
+		public Text getActualArrTime() {
+			return actualArrTime;
 		}
 
-		public void setFlightAirTime(IntWritable flightAirTime) {
-			this.flightAirTime = flightAirTime;
+		public void setActualArrTime(Text actualArrTime) {
+			this.actualArrTime = actualArrTime;
 		}
 
-		public IntWritable getFlightDistance() {
-			return flightDistance;
+		public Text getActualDepTime() {
+			return actualDepTime;
 		}
 
-		public void setFlightDistance(IntWritable flightDistance) {
-			this.flightDistance = flightDistance;
+		public void setActualDepTime(Text actualDepTime) {
+			this.actualDepTime = actualDepTime;
 		}
 	}
 
@@ -191,42 +168,20 @@ public class MissedConnections {
 			String[] fields = correctedString.split(",");
 			
 			if (FileRecord.csvHeaders.size() == fields.length && FileRecord.isRecordValid(fields)){
-				String carKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER);
+				String carDateKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "-"
+									+ FileRecord.getValueOf(fields, FileRecord.Field.FL_DATE);
+						
+				Text origin = new Text(FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN));
+				Text destination = new Text(FileRecord.getValueOf(fields, FileRecord.Field.DEST));
 				
-				AirlineMapperValue amv = new AirlineMapperValue();
-		
-				String flYearStr = FileRecord.getValueOf(fields, FileRecord.Field.YEAR); 
-				String flPriceStr = FileRecord.getValueOf(fields, FileRecord.Field.AVG_TICKET_PRICE);
-				String flMonthStr = FileRecord.getValueOf(fields, FileRecord.Field.MONTH); 
-				String flAirTimeStr = FileRecord.getValueOf(fields, FileRecord.Field.AIR_TIME);
-				String flDistStr = FileRecord.getValueOf(fields, FileRecord.Field.DISTANCE);
+				Text crsArrTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.CRS_ARR_TIME));
+				Text crsDepTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.CRS_DEP_TIME));
+				Text actualArrTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.ARR_TIME));
+				Text actualDepTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.DEP_TIME));
 				
-				if(!flDistStr.equals("")){
-					int flyear = Integer.parseInt(flYearStr);
-					
-					double flightPrice = Double.parseDouble(flPriceStr);
-					int flightMonth = Integer.parseInt(flMonthStr);
-					boolean flightYearIs2015 = flyear == 2015;
-					boolean flightYearBetween2010_2014 = flyear >= 2010 && flyear <=2014;
-					
-					// TODO: mention in report n readme
-					int flightAirTime;
-					if(!flAirTimeStr.equals("")){
-						flightAirTime = Integer.parseInt(flAirTimeStr);
-					} else {
-						// This value is guaranteed to be present since it is checked in the sanity check
-						// Also, this is a better approximation of "time" with respect to the flight price
-						// since ticket price is not determined by actual elapsed time, but scheduled time
-						flightAirTime = Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.CRS_ELAPSED_TIME));
-					}
-					
-					int flightDistance = Integer.parseInt(flDistStr);
-					
-					if(flightYearIs2015 || flightYearBetween2010_2014){
-						amv.setFromJava(flightPrice, flightMonth, flightYearIs2015, flightYearBetween2010_2014, flightAirTime, flightDistance);
-						context.write(new Text(carKey), amv);
-					}
-				}
+				AirlineMapperValue amv = new AirlineMapperValue(origin, destination, crsArrTime, crsDepTime, actualArrTime, actualDepTime); 
+						
+				context.write(new Text(carDateKey), amv);
 			}
 		}
 	}
@@ -235,25 +190,76 @@ public class MissedConnections {
 		
 		@Override
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
-			boolean is2015 = false;
-
-			ArrayList<AirlineMapperValue> carAMVList = new ArrayList<AirlineMapperValue>();
+			// Reducer will be called for EACH CARRIER on EACH DAY
+			int missedConnectionCount = 0;
 			
-			// If the carrier is active in 2015 (i.e. any flight has the flightYearIs2015 flag set)
-			for (AirlineMapperValue eachAMV : listOfAMVs){
-				carAMVList.add(new AirlineMapperValue(eachAMV));
-				is2015 = eachAMV.getFlightYearIs2015().get() || is2015;
+			String[] keyparts = key.toString().split("-");
+			String carrier = keyparts[0];
+			String year = keyparts[1];
+			String month = keyparts[2];
+			String day = keyparts[3];
+			
+			ArrayList<AirlineMapperValue> A_listOfAMVs = new ArrayList<AirlineMapperValue>();
+			ArrayList<AirlineMapperValue> B_listOfAMVs = new ArrayList<AirlineMapperValue>();
+			
+			for(AirlineMapperValue amv : listOfAMVs){
+				A_listOfAMVs.add(new AirlineMapperValue(amv));
+				B_listOfAMVs.add(new AirlineMapperValue(amv));
 			}
 			
-			if(is2015){				
-				for (AirlineMapperValue eachAMV : carAMVList){				
-					// If this record is of flight between 2010-2014
-					if(eachAMV.getFlightYearBetween2010_2014().get()){
-						String lrCarrierOutput = eachAMV.getFlightDistance().get() + "\t" + eachAMV.getFlightAirTime().get() + "\t" + eachAMV.getFlightPrice().get(); 
-						context.write(key, new Text(lrCarrierOutput));
+			for(AirlineMapperValue a_amv : A_listOfAMVs){
+				for(AirlineMapperValue b_amv : B_listOfAMVs){
+					if(missedConnection(a_amv, b_amv) || missedConnection(b_amv, a_amv)){
+						missedConnectionCount += 1;
 					}
 				}
 			}
+			
+		}
+
+		@Override
+		protected void cleanup(Reducer<Text, AirlineMapperValue, Text, Text>.Context context)
+				throws IOException, InterruptedException {
+			// TODO combine counts for all days for this carrier
+			super.cleanup(context);
+		}
+
+		// Helper functions:
+		
+		private boolean missedConnection(AirlineMapperValue famv, AirlineMapperValue gamv) {
+			if(isConnection(famv, gamv)){
+				int actualTimeDiff = hhmmDiffInMins(famv.getActualArrTime().toString(), gamv.getActualDepTime().toString());
+				if (actualTimeDiff < 30){
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private boolean isConnection(AirlineMapperValue famv, AirlineMapperValue gamv) {
+			if(famv.getDestination().toString().equals(gamv.getOrigin().toString())){
+				int timeDiff = hhmmDiffInMins(gamv.getCrsDepTime().toString(), famv.getCrsArrTime().toString());
+				if (timeDiff < 0){
+					// G departure before F arrival, so cant be a connection
+					return false;
+				}
+				
+				if(timeDiff <= 360 && timeDiff >= 30){
+					return true;
+				}
+			}
+			return false;
+		}
+
+		
+		private static int hhmmDiffInMins(String t1, String t2) {
+			int t1HH = Integer.parseInt(t1.substring(0, 2));
+			int t1MM = Integer.parseInt(t1.substring(2, 4));
+
+			int t2HH = Integer.parseInt(t2.substring(0, 2));
+			int t2MM = Integer.parseInt(t2.substring(2, 4));
+
+			return (t1HH - t2HH) * 60 + (t1MM - t2MM);
 		}
 	}
 	
