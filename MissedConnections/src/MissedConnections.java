@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -15,12 +16,37 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class MissedConnections {
 
+	/*
+	 * A connection is any pair of flight F and G of the same carrier such as F.Destination = G.Origin 
+	 * and the scheduled departure of G is <= 6 hours and >= 30 minutes after the scheduled arrival of F.
+	 * 
+	 * A connection is missed when the actual arrival of F < 30 minutes before the actual departure of G.
+	 * 
+	 * Solution:
+	 * 
+	 * Output of mapper:
+	 * 	Key	:	we want flights of the same carrier and same day
+	 * 			so we propose a key like this
+	 * 			<CARRIER>,<DATE>
+	 * 
+	 * Since this will lead to a lot of keys, we could have a partitioner that sends dates of same carriers 
+	 * to the same Reducer. I.E. based on <CARRIER>
+	 * 
+	 * Value :	We will need the following from each flight record:
+	 * 			DESTINATION
+	 * 			ORIGIN
+	 * 			Scheduled Times
+	 * 			Actual Times
+	 * 
+	 * */
+	
 	public static class AirlineMapperValue implements Writable {
 		DoubleWritable flightPrice;
 		IntWritable flightMonth;
@@ -158,7 +184,7 @@ public class MissedConnections {
 	public static class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue> {
 
 		@Override
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+			public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String fileEntry = value.toString();
 			fileEntry = fileEntry.replaceAll("\"", "");
 			String correctedString = fileEntry.replaceAll(", ", ":");
@@ -230,6 +256,18 @@ public class MissedConnections {
 			}
 		}
 	}
+	
+	public static class AirlinePartitioner extends Partitioner<Text, AirlineMapperValue>{
+
+		private static final String[] uc = {"9E", "AA", "AS", "B6", "DL", "EV", "F9", "FL", "HA", 
+											"MQ", "NK", "OO", "UA", "US", "VX", "WN", "YV"}; 
+		private static final ArrayList<String> UNIQUE_CARRIERS = new ArrayList<String>(Arrays.asList(uc));
+
+		@Override
+		public int getPartition(Text carKey, AirlineMapperValue amv, int numberOfReducers) {
+			return UNIQUE_CARRIERS.indexOf(carKey.toString()) % numberOfReducers;
+		}		
+	}
 
 	public static void main(String[] args) throws Exception {
 
@@ -254,6 +292,7 @@ public class MissedConnections {
 		job.setJarByClass(MissedConnections.class);
 
 		job.setMapperClass(AirlineMapper.class);
+		job.setPartitionerClass(AirlinePartitioner.class);
 		job.setReducerClass(AirlineLinearRegressionReducer.class);
 		
 		job.setMapOutputKeyClass(Text.class);
