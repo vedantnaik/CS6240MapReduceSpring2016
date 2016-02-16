@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -188,16 +189,16 @@ public class MissedConnections {
 	
 	public static class AirlineLinearRegressionReducer extends Reducer<Text, AirlineMapperValue, Text, Text> {
 		
+		HashMap<String, Long> carYearCountMap = new HashMap<String, Long>();
+		
 		@Override
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
 			// Reducer will be called for EACH CARRIER on EACH DAY
-			int missedConnectionCount = 0;
+			long missedConnectionCount = 0;
 			
 			String[] keyparts = key.toString().split("-");
 			String carrier = keyparts[0];
 			String year = keyparts[1];
-			String month = keyparts[2];
-			String day = keyparts[3];
 			
 			ArrayList<AirlineMapperValue> A_listOfAMVs = new ArrayList<AirlineMapperValue>();
 			ArrayList<AirlineMapperValue> B_listOfAMVs = new ArrayList<AirlineMapperValue>();
@@ -215,13 +216,22 @@ public class MissedConnections {
 				}
 			}
 			
+			String carYearKey = carrier+"\t"+year;
+			
+			if(!carYearCountMap.containsKey(carYearKey)){
+				carYearCountMap.put(carYearKey, new Long(0));
+			}
+			
+			Long countSoFar = carYearCountMap.get(carYearKey) + missedConnectionCount;
+			carYearCountMap.put(carYearKey, countSoFar);
 		}
 
 		@Override
 		protected void cleanup(Reducer<Text, AirlineMapperValue, Text, Text>.Context context)
 				throws IOException, InterruptedException {
-			// TODO combine counts for all days for this carrier
-			super.cleanup(context);
+			for(String carYearKey : carYearCountMap.keySet()){
+				context.write(new Text(carYearKey), new Text(carYearCountMap.get(carYearKey) + ""));
+			}
 		}
 
 		// Helper functions:
