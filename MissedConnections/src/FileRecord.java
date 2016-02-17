@@ -75,13 +75,23 @@ public class FileRecord {
 			"DIV5_AIRPORT", "DIV5_AIRPORT_ID", "DIV5_AIRPORT_SEQ_ID", "DIV5_WHEELS_ON", "DIV5_TOTAL_GTIME",
 			"DIV5_LONGEST_GTIME", "DIV5_WHEELS_OFF", "DIV5_TAIL_NUM", "AVG_TICKET_PRICE" };
 	public static final ArrayList<String> csvHeaders = new ArrayList<String>(Arrays.asList(csvh));
-
+	
 	protected static String getValueOf(String[] fields, String headerName) {
 		return fields[csvHeaders.indexOf(headerName)];
 	}
 
 	protected static boolean isRecordValid(String[] fields) {
 
+		// Special quick checks for MissingConnections assignment
+		
+		if (fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)].equals("") ||
+			fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)].equals("") ||
+			fields[csvHeaders.indexOf(Field.ARR_TIME)].equals("") ||
+			fields[csvHeaders.indexOf(Field.DEP_TIME)].equals("")){
+			return false;
+		}
+		
+		
 		float timeZone = 0;
 
 		// CRSArrTime and CRSDepTime should not be zero

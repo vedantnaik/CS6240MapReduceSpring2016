@@ -4,15 +4,20 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
@@ -24,7 +29,9 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class MissedConnections {
 
-	/*
+	/*					SOLUTION DESCRIPTION
+	 * 					====================
+	 * 
 	 * A connection is any pair of flight F and G of the same carrier such as F.Destination = G.Origin 
 	 * 
 	 * 	flt F	--->	SomeAirport		---> flt G
@@ -37,9 +44,9 @@ public class MissedConnections {
 	 * Solution:
 	 * 
 	 * Output of mapper:
-	 * 	Key	:	we want flights of the same carrier and same day
+	 * 	Key	:	we want flights of the same carrier and same year
 	 * 			so we propose a key like this	(hyphen separated)
-	 * 			<CARRIER>-<DATE>
+	 * 			<CARRIER>-<YEAR>
 	 * 
 	 * Since this will lead to a lot of keys, we could have a partitioner that sends dates of same carriers 
 	 * to the same Reducer. I.E. based on <CARRIER>
@@ -47,31 +54,31 @@ public class MissedConnections {
 	 * Value :	We will need the following from each flight record:
 	 * 			DESTINATION
 	 * 			ORIGIN
-	 * 			Scheduled Times
-	 * 			Actual Times
-	 * 
+	 * 			Scheduled arrival and departure times
+	 * 			Actual arrival and departure times
+	 * 			[NOTE: store the times in long, so that difference can be calculated for connections that span over
+	 * 					days and months]
 	 * */
 	
 	public static class AirlineMapperValue implements Writable {
-		// TODO: 04_edge: Add long for time
 		Text origin;
 		Text destination;
-		Text crsArrTime;
-		Text crsDepTime;
-		Text actualArrTime;
-		Text actualDepTime;
+		LongWritable crsArrTime;
+		LongWritable crsDepTime;
+		LongWritable actualArrTime;
+		LongWritable actualDepTime;
 		
 		public AirlineMapperValue(){
 			this.origin = new Text();
 			this.destination = new Text();
-			this.crsArrTime = new Text();
-			this.crsDepTime = new Text();
-			this.actualArrTime = new Text();
-			this.actualDepTime = new Text();
+			this.crsArrTime = new LongWritable();
+			this.crsDepTime = new LongWritable();
+			this.actualArrTime = new LongWritable();
+			this.actualDepTime = new LongWritable();
 		}
 		
-		public AirlineMapperValue(Text origin, Text destination, Text crsArrTime, Text crsDepTime,
-				Text actualArrTime, Text actualDepTime) {
+		public AirlineMapperValue(Text origin, Text destination, LongWritable crsArrTime, LongWritable crsDepTime,
+				LongWritable actualArrTime, LongWritable actualDepTime) {
 			this.origin = origin;
 			this.destination = destination;
 			this.crsArrTime = crsArrTime;
@@ -113,10 +120,10 @@ public class MissedConnections {
 		public String toString() {
 			return "[Origin:" + origin.toString() + " " 
 					+ "Dest:" + destination.toString() + " "
-					+ "crsArr:" + crsArrTime.toString() + " "
-					+ "crsDep:" + crsDepTime.toString() + " "
-					+ "actualArr:" + actualArrTime.toString() + " "
-					+ "actualDep:"+ actualDepTime.toString() +"]";
+					+ "crsArr:" + crsArrTime.get() + " "
+					+ "crsDep:" + crsDepTime.get() + " "
+					+ "actualArr:" + actualArrTime.get() + " "
+					+ "actualDep:"+ actualDepTime.get() +"]";
 		}
 
 		public Text getOrigin() {
@@ -135,136 +142,159 @@ public class MissedConnections {
 			this.destination = destination;
 		}
 
-		public Text getCrsArrTime() {
+		public LongWritable getCrsArrTime() {
 			return crsArrTime;
 		}
 
-		public void setCrsArrTime(Text crsArrTime) {
+		public void setCrsArrTime(LongWritable crsArrTime) {
 			this.crsArrTime = crsArrTime;
 		}
 
-		public Text getCrsDepTime() {
+		public LongWritable getCrsDepTime() {
 			return crsDepTime;
 		}
 
-		public void setCrsDepTime(Text crsDepTime) {
+		public void setCrsDepTime(LongWritable crsDepTime) {
 			this.crsDepTime = crsDepTime;
 		}
 
-		public Text getActualArrTime() {
+		public LongWritable getActualArrTime() {
 			return actualArrTime;
 		}
 
-		public void setActualArrTime(Text actualArrTime) {
+		public void setActualArrTime(LongWritable actualArrTime) {
 			this.actualArrTime = actualArrTime;
 		}
 
-		public Text getActualDepTime() {
+		public LongWritable getActualDepTime() {
 			return actualDepTime;
 		}
 
-		public void setActualDepTime(Text actualDepTime) {
+		public void setActualDepTime(LongWritable actualDepTime) {
 			this.actualDepTime = actualDepTime;
 		}
+		
 	}
 
 	public static class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue> {
 
 		@Override
-			public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String fileEntry = value.toString();
 			fileEntry = fileEntry.replaceAll("\"", "");
 			String correctedString = fileEntry.replaceAll(", ", ":");
 			String[] fields = correctedString.split(",");
 			
 			if (FileRecord.csvHeaders.size() == fields.length && FileRecord.isRecordValid(fields)){
-				String carDateKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "-"
-									+ FileRecord.getValueOf(fields, FileRecord.Field.FL_DATE);
-									// TODO: 04_edge:replace with year 
+				String[] fldate = FileRecord.getValueOf(fields, FileRecord.Field.FL_DATE).split("-");
+
+				String year = fldate[0];
+				String month = fldate[1];
+				String day = fldate[2];
+						
+				String carDateKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + year;
 						
 				Text origin = new Text(FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN));
 				Text destination = new Text(FileRecord.getValueOf(fields, FileRecord.Field.DEST));
 				
-				Text crsArrTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.CRS_ARR_TIME));
-				Text crsDepTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.CRS_DEP_TIME));
-				Text actualArrTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.ARR_TIME));
-				Text actualDepTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.DEP_TIME));
+				long crsArrTime; 	
+				long crsDepTime; 
+				long actualArrTime;
+				long actualDepTime;
 				
-				// TODO: 04_edge: Calculate long time using system calendar and store in amv 
+				try {
+					// Store java date in long so that it will for for finding connections that span over days and months
+					crsArrTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.CRS_ARR_TIME));
+					crsDepTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.CRS_DEP_TIME));
+					actualArrTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.ARR_TIME));
+					actualDepTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.DEP_TIME));
+				} catch (ParseException pe) {
+					System.err.println("Unable to create long date for a sane record!!");
+					return;
+				} catch (StringIndexOutOfBoundsException siobe) {
+					System.err.println("Some value missing in sane record, although handeled in sanity check!!");
+					return;
+				}
 				
-				AirlineMapperValue amv = new AirlineMapperValue(origin, destination, crsArrTime, crsDepTime, actualArrTime, actualDepTime); 
+				AirlineMapperValue amv = new AirlineMapperValue(origin, destination, 
+						new LongWritable(crsArrTime), new LongWritable(crsDepTime), 
+						new LongWritable(actualArrTime), new LongWritable(actualDepTime)); 
 						
 				context.write(new Text(carDateKey), amv);
 			}
 		}
+		
+		private long getJavaDateInLong(String year, String month, String day, String HHMM) throws ParseException{
+			SimpleDateFormat sf = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss");
+			
+			String str1 = year + "-" + month + "-" + day + "T" + HHMM.substring(0, 2) + ":" + HHMM.substring(2, 4) +":00";
+			Date date1 = sf.parse(str1);
+			return date1.getTime();
+		}
 	}
 	
-	public static class AirlineLinearRegressionReducer extends Reducer<Text, AirlineMapperValue, Text, Text> {
+	public static class AirlineMissedConnectionsReducer extends Reducer<Text, AirlineMapperValue, Text, Text> {
 		
-		HashMap<String, Long> carYearCountMap = new HashMap<String, Long>();
-		
+		HashMap<String, Long> carYearCountConnectionsMap = new HashMap<String, Long>();
+		HashMap<String, Long> carYearCountMissedMap = new HashMap<String, Long>();
+				
 		@Override
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
-			// Reducer will be called for EACH CARRIER on EACH DAY
+			// Reducer will be called for EACH CARRIER on EACH YEAR
+			long connectionCount = 0;
 			long missedConnectionCount = 0;
 			
-			//System.out.println("========================reducer================" + key.toString());
-			
-			String[] keyparts = key.toString().split("-");
-			String carrier = keyparts[0];
-			String year = keyparts[1];
 			
 			ArrayList<AirlineMapperValue> A_listOfAMVs = new ArrayList<AirlineMapperValue>();
-			ArrayList<AirlineMapperValue> B_listOfAMVs = new ArrayList<AirlineMapperValue>();
 			
 			for(AirlineMapperValue amv : listOfAMVs){
 				A_listOfAMVs.add(new AirlineMapperValue(amv));
-				B_listOfAMVs.add(new AirlineMapperValue(amv));
 			}
 			
-			for(AirlineMapperValue a_amv : A_listOfAMVs){
-				for(AirlineMapperValue b_amv : B_listOfAMVs){
-					if(missedConnection(a_amv, b_amv) || missedConnection(b_amv, a_amv)){
-						missedConnectionCount += 1;
+			for (int aIndex = 0; aIndex < A_listOfAMVs.size(); aIndex++){
+				for (int bIndex = aIndex + 1; bIndex < A_listOfAMVs.size(); bIndex++){
+					AirlineMapperValue a_amv = new AirlineMapperValue(A_listOfAMVs.get(aIndex));
+					AirlineMapperValue b_amv = new AirlineMapperValue(A_listOfAMVs.get(bIndex));
+					
+					if(isConnection(a_amv, b_amv)){
+						connectionCount = connectionCount + 1;
+						if (missedConnection(a_amv, b_amv)){
+							System.out.println(a_amv.toString() + " ==missed==>" + b_amv.toString());
+							missedConnectionCount += 1;
+						}
+					} else if(isConnection(b_amv, a_amv)) {
+						connectionCount = connectionCount + 1;
+						if (missedConnection(b_amv, a_amv)){
+							System.out.println(b_amv.toString() + " ==missed==>" + a_amv.toString());
+							missedConnectionCount += 1;
+						}
 					}
+					
 				}
 			}
 			
-			String carYearKey = carrier+"\t"+year;
+			double percentMissed = (missedConnectionCount/connectionCount) * 100;
 			
-			if(!carYearCountMap.containsKey(carYearKey)){
-				carYearCountMap.put(carYearKey, new Long(0));
-			}
-			
-			Long countSoFar = carYearCountMap.get(carYearKey) + missedConnectionCount;
-			carYearCountMap.put(carYearKey, countSoFar);
+			context.write(key, new Text(missedConnectionCount + "\t " + percentMissed));
 		}
 
-		@Override
-		protected void cleanup(Reducer<Text, AirlineMapperValue, Text, Text>.Context context)
-				throws IOException, InterruptedException {
-			for(String carYearKey : carYearCountMap.keySet()){
-				context.write(new Text(carYearKey), new Text(carYearCountMap.get(carYearKey) + ""));
-			}
-		}
 
 		// Helper functions:
 		
 		private boolean missedConnection(AirlineMapperValue famv, AirlineMapperValue gamv) {
-			if(isConnection(famv, gamv)){
-				int actualTimeDiff = hhmmDiffInMins(famv.getActualArrTime().toString(), gamv.getActualDepTime().toString());
-				if (actualTimeDiff < 30){
-					return true;
-				}
+			// flights sent to this method HAVE to be connecting
+			long actualTimeDiff = longTimeDifferenceInMins(famv.getActualArrTime().get(), gamv.getActualDepTime().get());
+			if (actualTimeDiff < 30){
+				return true;
 			}
 			return false;
 		}
 
 		private boolean isConnection(AirlineMapperValue famv, AirlineMapperValue gamv) {
 			if(famv.getDestination().toString().equals(gamv.getOrigin().toString())){
-				int timeDiff = hhmmDiffInMins(gamv.getCrsDepTime().toString(), famv.getCrsArrTime().toString());
+				long timeDiff = longTimeDifferenceInMins(gamv.getCrsDepTime().get(), famv.getCrsArrTime().get());
 				if (timeDiff < 0){
-					// G departure before F arrival, so cant be a connection
+					// G is scheduled to departure before F is scheduled to arrive, so cant be a connection
 					return false;
 				}
 				
@@ -275,15 +305,8 @@ public class MissedConnections {
 			return false;
 		}
 
-		// TODO: 04_edge: Change to handle time in java's long format
-		private static int hhmmDiffInMins(String t1, String t2) {
-			int t1HH = Integer.parseInt(t1.substring(0, 2));
-			int t1MM = Integer.parseInt(t1.substring(2, 4));
-
-			int t2HH = Integer.parseInt(t2.substring(0, 2));
-			int t2MM = Integer.parseInt(t2.substring(2, 4));
-
-			return (t1HH - t2HH) * 60 + (t1MM - t2MM);
+		private static long longTimeDifferenceInMins(long t1, long t2) {
+			return TimeUnit.MILLISECONDS.toMinutes(t1 - t2);
 		}
 	}
 	
@@ -295,7 +318,7 @@ public class MissedConnections {
 
 		@Override
 		public int getPartition(Text carKey, AirlineMapperValue amv, int numberOfReducers) {
-			String[] keyparts = carKey.toString().split("-");
+			String[] keyparts = carKey.toString().split("\t");
 			return UNIQUE_CARRIERS.indexOf(keyparts[0]) % numberOfReducers;
 		}		
 	}
@@ -324,7 +347,7 @@ public class MissedConnections {
 
 		job.setMapperClass(AirlineMapper.class);
 		job.setPartitionerClass(AirlinePartitioner.class);
-		job.setReducerClass(AirlineLinearRegressionReducer.class);
+		job.setReducerClass(AirlineMissedConnectionsReducer.class);
 		
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(AirlineMapperValue.class);
