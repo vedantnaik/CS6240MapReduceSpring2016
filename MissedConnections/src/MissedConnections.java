@@ -53,13 +53,22 @@ public class MissedConnections {
 	 * */
 	
 	public static class AirlineMapperValue implements Writable {
-		
+		// TODO: 04_edge: Add long for time
 		Text origin;
 		Text destination;
 		Text crsArrTime;
 		Text crsDepTime;
 		Text actualArrTime;
 		Text actualDepTime;
+		
+		public AirlineMapperValue(){
+			this.origin = new Text();
+			this.destination = new Text();
+			this.crsArrTime = new Text();
+			this.crsDepTime = new Text();
+			this.actualArrTime = new Text();
+			this.actualDepTime = new Text();
+		}
 		
 		public AirlineMapperValue(Text origin, Text destination, Text crsArrTime, Text crsDepTime,
 				Text actualArrTime, Text actualDepTime) {
@@ -171,6 +180,7 @@ public class MissedConnections {
 			if (FileRecord.csvHeaders.size() == fields.length && FileRecord.isRecordValid(fields)){
 				String carDateKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "-"
 									+ FileRecord.getValueOf(fields, FileRecord.Field.FL_DATE);
+									// TODO: 04_edge:replace with year 
 						
 				Text origin = new Text(FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN));
 				Text destination = new Text(FileRecord.getValueOf(fields, FileRecord.Field.DEST));
@@ -179,6 +189,8 @@ public class MissedConnections {
 				Text crsDepTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.CRS_DEP_TIME));
 				Text actualArrTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.ARR_TIME));
 				Text actualDepTime = new Text(FileRecord.getValueOf(fields, FileRecord.Field.DEP_TIME));
+				
+				// TODO: 04_edge: Calculate long time using system calendar and store in amv 
 				
 				AirlineMapperValue amv = new AirlineMapperValue(origin, destination, crsArrTime, crsDepTime, actualArrTime, actualDepTime); 
 						
@@ -195,6 +207,8 @@ public class MissedConnections {
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
 			// Reducer will be called for EACH CARRIER on EACH DAY
 			long missedConnectionCount = 0;
+			
+			//System.out.println("========================reducer================" + key.toString());
 			
 			String[] keyparts = key.toString().split("-");
 			String carrier = keyparts[0];
@@ -261,7 +275,7 @@ public class MissedConnections {
 			return false;
 		}
 
-		
+		// TODO: 04_edge: Change to handle time in java's long format
 		private static int hhmmDiffInMins(String t1, String t2) {
 			int t1HH = Integer.parseInt(t1.substring(0, 2));
 			int t1MM = Integer.parseInt(t1.substring(2, 4));
@@ -281,7 +295,8 @@ public class MissedConnections {
 
 		@Override
 		public int getPartition(Text carKey, AirlineMapperValue amv, int numberOfReducers) {
-			return UNIQUE_CARRIERS.indexOf(carKey.toString()) % numberOfReducers;
+			String[] keyparts = carKey.toString().split("-");
+			return UNIQUE_CARRIERS.indexOf(keyparts[0]) % numberOfReducers;
 		}		
 	}
 
