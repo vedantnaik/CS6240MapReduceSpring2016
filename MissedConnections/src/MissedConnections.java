@@ -108,12 +108,12 @@ public class MissedConnections {
 		}
 		
 		public AirlineMapperValue(AirlineMapperValue amv) {
-			this.origin = amv.getOrigin();
-			this.destination = amv.getDestination();
-			this.crsArrTime = amv.getCrsArrTime();
-			this.crsDepTime = amv.getCrsDepTime();
-			this.actualArrTime = amv.getActualArrTime();
-			this.actualDepTime = amv.getActualDepTime();
+			this.origin = new Text(amv.getOrigin().toString());
+			this.destination = new Text(amv.getDestination().toString());
+			this.crsArrTime = new LongWritable(amv.getCrsArrTime().get());
+			this.crsDepTime = new LongWritable(amv.getCrsDepTime().get());
+			this.actualArrTime = new LongWritable(amv.getActualArrTime().get());
+			this.actualDepTime = new LongWritable(amv.getActualDepTime().get());
 		}
 		
 		@Override
@@ -267,25 +267,24 @@ public class MissedConnections {
 			
 			ArrayList<AirlineMapperValue> A_listOfAMVs = new ArrayList<AirlineMapperValue>();
 			
+			int listSize = 0;
 			for(AirlineMapperValue amv : listOfAMVs){
 				A_listOfAMVs.add(new AirlineMapperValue(amv));
+				listSize += 1;
 			}
 			
-			for (int aIndex = 0; aIndex < A_listOfAMVs.size(); aIndex++){
+			for (int aIndex = 0; aIndex < listSize; aIndex++){
 				AirlineMapperValue a_amv = new AirlineMapperValue(A_listOfAMVs.get(aIndex));
-				for (int bIndex = aIndex + 1; bIndex < A_listOfAMVs.size(); bIndex++){
+				for (int bIndex = aIndex + 1; bIndex < listSize; bIndex++){
 					AirlineMapperValue b_amv = new AirlineMapperValue(A_listOfAMVs.get(bIndex));
-					System.out.println(a_amv.toString() + " >> " + A_listOfAMVs.get(bIndex));
 					if(isConnection(a_amv, b_amv)){
 						connectionCount = connectionCount + 1;
 						if (missedConnection(a_amv, b_amv)){
-							System.out.println(a_amv.toString() + " ==missed==>" + b_amv.toString());
 							missedConnectionCount += 1;
 						}
 					} else if(isConnection(b_amv, a_amv)) {
 						connectionCount = connectionCount + 1;
 						if (missedConnection(b_amv, a_amv)){
-							System.out.println(b_amv.toString() + " ==missed==>" + a_amv.toString());
 							missedConnectionCount += 1;
 						}
 					}
