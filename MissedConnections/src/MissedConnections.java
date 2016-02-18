@@ -27,6 +27,26 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+
+/*
+ * PERFORMANCE PATCH _05
+ * =====================
+ * 
+ * change mapper key to have airport along with carrier and year
+ * 	- so now, in reducer, we will have list of flights grouped as
+ * 			<carrier> <year> <airport> 
+ * 							origin/dest 
+ * 		for each record, write two values to the context
+ * 
+ * this will ensure that flights with same carriers, year and matching origin and destination
+ * 
+ * in the reducer:
+ * 	we take list of values, and check timings.
+ * 
+ * */
+
+
+
 public class MissedConnections {
 
 	/*					SOLUTION DESCRIPTION
@@ -252,10 +272,10 @@ public class MissedConnections {
 			}
 			
 			for (int aIndex = 0; aIndex < A_listOfAMVs.size(); aIndex++){
+				AirlineMapperValue a_amv = new AirlineMapperValue(A_listOfAMVs.get(aIndex));
 				for (int bIndex = aIndex + 1; bIndex < A_listOfAMVs.size(); bIndex++){
-					AirlineMapperValue a_amv = new AirlineMapperValue(A_listOfAMVs.get(aIndex));
 					AirlineMapperValue b_amv = new AirlineMapperValue(A_listOfAMVs.get(bIndex));
-					
+					System.out.println(a_amv.toString() + " >> " + A_listOfAMVs.get(bIndex));
 					if(isConnection(a_amv, b_amv)){
 						connectionCount = connectionCount + 1;
 						if (missedConnection(a_amv, b_amv)){
@@ -269,8 +289,10 @@ public class MissedConnections {
 							missedConnectionCount += 1;
 						}
 					}
-					
+					b_amv = null;
 				}
+				
+				a_amv = null;
 			}
 			
 			double percentMissed = (missedConnectionCount/connectionCount) * 100;
