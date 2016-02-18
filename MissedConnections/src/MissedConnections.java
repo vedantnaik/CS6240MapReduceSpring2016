@@ -81,26 +81,24 @@ public class MissedConnections {
 	 * */
 	
 	public static class AirlineMapperValue implements Writable {
-		Text origin;
-		Text destination;
+		Text connectionLink;	// ORIGIN or DESTINATION
+
 		LongWritable crsArrTime;
 		LongWritable crsDepTime;
 		LongWritable actualArrTime;
 		LongWritable actualDepTime;
 		
 		public AirlineMapperValue(){
-			this.origin = new Text();
-			this.destination = new Text();
+			this.connectionLink = new Text();
 			this.crsArrTime = new LongWritable();
 			this.crsDepTime = new LongWritable();
 			this.actualArrTime = new LongWritable();
 			this.actualDepTime = new LongWritable();
 		}
 		
-		public AirlineMapperValue(Text origin, Text destination, LongWritable crsArrTime, LongWritable crsDepTime,
+		public AirlineMapperValue(Text connectionLink, LongWritable crsArrTime, LongWritable crsDepTime,
 				LongWritable actualArrTime, LongWritable actualDepTime) {
-			this.origin = origin;
-			this.destination = destination;
+			this.connectionLink = connectionLink;
 			this.crsArrTime = crsArrTime;
 			this.crsDepTime = crsDepTime;
 			this.actualArrTime = actualArrTime;
@@ -108,8 +106,7 @@ public class MissedConnections {
 		}
 		
 		public AirlineMapperValue(AirlineMapperValue amv) {
-			this.origin = new Text(amv.getOrigin().toString());
-			this.destination = new Text(amv.getDestination().toString());
+			this.connectionLink = new Text(amv.getConnectionLink().toString());
 			this.crsArrTime = new LongWritable(amv.getCrsArrTime().get());
 			this.crsDepTime = new LongWritable(amv.getCrsDepTime().get());
 			this.actualArrTime = new LongWritable(amv.getActualArrTime().get());
@@ -118,8 +115,7 @@ public class MissedConnections {
 		
 		@Override
 		public void readFields(DataInput inVal) throws IOException {
-			origin.readFields(inVal);
-			destination.readFields(inVal);
+			connectionLink.readFields(inVal);
 			crsArrTime.readFields(inVal);
 			crsDepTime.readFields(inVal);
 			actualArrTime.readFields(inVal);
@@ -128,8 +124,7 @@ public class MissedConnections {
 
 		@Override
 		public void write(DataOutput outVal) throws IOException {
-			origin.write(outVal);
-			destination.write(outVal);
+			connectionLink.write(outVal);
 			crsArrTime.write(outVal);
 			crsDepTime.write(outVal);
 			actualArrTime.write(outVal);
@@ -138,28 +133,19 @@ public class MissedConnections {
 
 		@Override
 		public String toString() {
-			return "[Origin:" + origin.toString() + " " 
-					+ "Dest:" + destination.toString() + " "
-					+ "crsArr:" + crsArrTime.get() + " "
-					+ "crsDep:" + crsDepTime.get() + " "
-					+ "actualArr:" + actualArrTime.get() + " "
-					+ "actualDep:"+ actualDepTime.get() +"]";
+			return "[FlightType:" + connectionLink.toString() + " " 
+					+ "crsArr:" + new Date(crsArrTime.get()).toString() + " "
+					+ "crsDep:" + new Date(crsDepTime.get()).toString() + " "
+					+ "actualArr:" + new Date(actualArrTime.get()).toString() + " "
+					+ "actualDep:"+ new Date(actualDepTime.get()).toString() +"]";
 		}
 
-		public Text getOrigin() {
-			return origin;
+		public Text getConnectionLink() {
+			return connectionLink;
 		}
 
-		public void setOrigin(Text origin) {
-			this.origin = origin;
-		}
-
-		public Text getDestination() {
-			return destination;
-		}
-
-		public void setDestination(Text destination) {
-			this.destination = destination;
+		public void setConnectionLink(Text connectionLink) {
+			this.connectionLink = connectionLink;
 		}
 
 		public LongWritable getCrsArrTime() {
@@ -212,11 +198,6 @@ public class MissedConnections {
 				String month = fldate[1];
 				String day = fldate[2];
 						
-				String carDateKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + year;
-						
-				Text origin = new Text(FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN));
-				Text destination = new Text(FileRecord.getValueOf(fields, FileRecord.Field.DEST));
-				
 				long crsArrTime; 	
 				long crsDepTime; 
 				long actualArrTime;
@@ -236,11 +217,21 @@ public class MissedConnections {
 					return;
 				}
 				
-				AirlineMapperValue amv = new AirlineMapperValue(origin, destination, 
+				// a flight can be a destination OR the origin of a connection
+				AirlineMapperValue amvDest = new AirlineMapperValue(new Text("DESTINATION"), 
 						new LongWritable(crsArrTime), new LongWritable(crsDepTime), 
-						new LongWritable(actualArrTime), new LongWritable(actualDepTime)); 
-						
-				context.write(new Text(carDateKey), amv);
+						new LongWritable(actualArrTime), new LongWritable(actualDepTime)); 				
+				String carDestKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + 
+														FileRecord.getValueOf(fields, FileRecord.Field.DEST) + "\t" + year;
+				context.write(new Text(carDestKey), amvDest);
+				
+				AirlineMapperValue amvOrig = new AirlineMapperValue(new Text("ORIGIN"), 
+						new LongWritable(crsArrTime), new LongWritable(crsDepTime), 
+						new LongWritable(actualArrTime), new LongWritable(actualDepTime)); 				
+				String carOrigKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + 
+														FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN) + "\t" + year;
+				context.write(new Text(carOrigKey), amvOrig);
+				
 			}
 		}
 		
@@ -255,50 +246,81 @@ public class MissedConnections {
 	
 	public static class AirlineMissedConnectionsReducer extends Reducer<Text, AirlineMapperValue, Text, Text> {
 		
-		HashMap<String, Long> carYearCountConnectionsMap = new HashMap<String, Long>();
-		HashMap<String, Long> carYearCountMissedMap = new HashMap<String, Long>();
+		// Key should have CARRIER and YEAR
+		HashMap<String, Double> carYearCountConnectionsMap = new HashMap<String, Double>();
+		HashMap<String, Double> carYearCountMissedMap = new HashMap<String, Double>();
 				
 		@Override
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
-			// Reducer will be called for EACH CARRIER on EACH YEAR
-			long connectionCount = 0;
-			long missedConnectionCount = 0;
+			// Reduce will be called for EACH CARRIER and EACH YEAR
+			// AND
+			// for flights with matching origin and destination.
+			double connectionCount = 0;
+			double missedCount = 0;
 			
+			ArrayList<AirlineMapperValue> Orig_listOfAMVs = new ArrayList<AirlineMapperValue>();
+			ArrayList<AirlineMapperValue> Dest_listOfAMVs = new ArrayList<AirlineMapperValue>();
 			
-			ArrayList<AirlineMapperValue> A_listOfAMVs = new ArrayList<AirlineMapperValue>();
-			
-			int listSize = 0;
 			for(AirlineMapperValue amv : listOfAMVs){
-				A_listOfAMVs.add(new AirlineMapperValue(amv));
-				listSize += 1;
+				if(amv.getConnectionLink().toString().equalsIgnoreCase("ORIGIN")){
+					Orig_listOfAMVs.add(new AirlineMapperValue(amv));					
+				} else {
+					Dest_listOfAMVs.add(new AirlineMapperValue(amv));
+				}
 			}
-			
-			for (int aIndex = 0; aIndex < listSize; aIndex++){
-				AirlineMapperValue a_amv = new AirlineMapperValue(A_listOfAMVs.get(aIndex));
-				for (int bIndex = aIndex + 1; bIndex < listSize; bIndex++){
-					AirlineMapperValue b_amv = new AirlineMapperValue(A_listOfAMVs.get(bIndex));
-					if(isConnection(a_amv, b_amv)){
+
+			for (AirlineMapperValue g_amv : Orig_listOfAMVs){
+				for(AirlineMapperValue f_amv : Dest_listOfAMVs){
+					if(isConnection(f_amv, g_amv)){
 						connectionCount = connectionCount + 1;
-						if (missedConnection(a_amv, b_amv)){
-							missedConnectionCount += 1;
-						}
-					} else if(isConnection(b_amv, a_amv)) {
-						connectionCount = connectionCount + 1;
-						if (missedConnection(b_amv, a_amv)){
-							missedConnectionCount += 1;
+						if(missedConnection(f_amv, g_amv)){
+							missedCount = missedCount + 1;
 						}
 					}
-					b_amv = null;
 				}
-				
-				a_amv = null;
 			}
 			
-			double percentMissed = (missedConnectionCount/connectionCount) * 100;
+			String[] keyParts = key.toString().split("\t");
+			// carrier = keyParts[0] 
+			// airport id = keyParts[1]
+			// year = keyParts[2]
+			String carYearKey = keyParts[0] + "\t" + keyParts[2]; 
 			
-			context.write(key, new Text(missedConnectionCount + "\t " + percentMissed));
+			if (!carYearCountConnectionsMap.containsKey(carYearKey)){
+				carYearCountConnectionsMap.put(carYearKey, (double) 0);
+			}
+			if (!carYearCountMissedMap.containsKey(carYearKey)){
+				carYearCountMissedMap.put(carYearKey, (double) 0);
+			}
+			
+			double connectionCountSoFar = carYearCountConnectionsMap.get(carYearKey);
+			double missedCountSoFar = carYearCountMissedMap.get(carYearKey);
+			
+			connectionCountSoFar = connectionCountSoFar + connectionCount;
+			missedCountSoFar = missedCountSoFar + missedCount;
+			
+			carYearCountConnectionsMap.put(carYearKey, connectionCountSoFar);
+			carYearCountMissedMap.put(carYearKey, missedCountSoFar);
 		}
 
+		
+		@Override
+		protected void cleanup(Reducer<Text, AirlineMapperValue, Text, Text>.Context context)
+				throws IOException, InterruptedException {
+			
+			for(String carYearKey : carYearCountConnectionsMap.keySet()){
+				
+				double missedCount = carYearCountMissedMap.get(carYearKey);
+				double connectionCount = carYearCountConnectionsMap.get(carYearKey);
+				
+				double percentMissed = (missedCount/connectionCount) * 100;
+				
+				context.write(new Text(carYearKey), new Text(missedCount + "\t " + percentMissed));
+				
+			}
+			
+		}
+		
 
 		// Helper functions:
 		
@@ -312,16 +334,9 @@ public class MissedConnections {
 		}
 
 		private boolean isConnection(AirlineMapperValue famv, AirlineMapperValue gamv) {
-			if(famv.getDestination().toString().equals(gamv.getOrigin().toString())){
-				long timeDiff = longTimeDifferenceInMins(gamv.getCrsDepTime().get(), famv.getCrsArrTime().get());
-				if (timeDiff < 0){
-					// G is scheduled to departure before F is scheduled to arrive, so cant be a connection
-					return false;
-				}
-				
-				if(timeDiff <= 360 && timeDiff >= 30){
-					return true;
-				}
+			long timeDiff = longTimeDifferenceInMins(gamv.getCrsDepTime().get(), famv.getCrsArrTime().get());
+			if(timeDiff <= 360 && timeDiff >= 30){
+				return true;
 			}
 			return false;
 		}

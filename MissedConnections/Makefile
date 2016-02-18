@@ -33,4 +33,5 @@ clearHadoop:
 	rm -r *.jar
 	rm -r *.java
 	rm -r *.class
+	rm -r outputPseudo
 
