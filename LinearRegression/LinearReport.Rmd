@@ -19,17 +19,15 @@ HA, EV, MQ, OO, US, B6, WN, UA, DL, NK, VX, AS, F9, AA
 
 # Graphs showing a linear fit of the variable to price for each airline
 
-```{r echo=FALSE}
+```{r fig.height=8, fig.width=8, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
 
 require(dplyr)
 require(ggplot2)
 library(R.utils)
 
 # Read data folder name from command line arguments
-#args <- commandArgs(trailingOnly = TRUE)
-#outputFolder <- args[1]
-
-outputFolder <- "outputPseudo"
+args <- commandArgs(trailingOnly = TRUE)
+outputFolder <- args[1]
 
 files <- dir(outputFolder, pattern='part-r-', full.names = TRUE)
 partOutputs <- lapply(files, read.csv, header=FALSE, sep="\t")
@@ -66,13 +64,13 @@ for(carrier in unique(data$Carrier)){
   par(mfrow = c(2,1))
   
   plot(dfForCarrier$Distance, dfForCarrier$AvgPrice,ylab="Average Ticket Price",
-      xlab=paste("Distance   ","Intercept :", lrDistance$coefficients[[1]], 
-                 "  Slope: ", lrDistance$coefficients[[2]]))
+      xlab=paste(carrier, " Distance Plot -","Intercept :", lrDistance$coefficients[[1]], 
+                 "  Slope: ", lrDistance$coefficients[[2]], "MSE:", mseDistance))
   abline(lrDistance, col='green')
   
   plot(dfForCarrier$Time, dfForCarrier$AvgPrice,ylab="Average Ticket Price",
-       xlab=paste("Distance   ","Intercept :", lrTime$coefficients[[1]], 
-                  "  Slope: ", lrTime$coefficients[[2]]))
+       xlab=paste(carrier, " Time Plot -","Intercept :", lrTime$coefficients[[1]], 
+                  "  Slope: ", lrTime$coefficients[[2]], "MSE:", mseTime))
   abline(lrTime, col='red')
   
   timePredVal <- lrTime$coefficients[[2]]*timePredFor +  lrTime$coefficients[[1]]
