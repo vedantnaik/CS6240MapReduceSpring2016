@@ -1,7 +1,13 @@
 */all/*
 */.settings/
-*/.classpath
-*/.project
+.classpath
+.project
+.Rhistory
 /bin/
 LinearRegression/
 Comparisons/
+*.class
+*.txt~
+*~
+*jar
+*tar.gz
