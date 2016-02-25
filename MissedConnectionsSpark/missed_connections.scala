@@ -17,7 +17,7 @@ object MissedConnections {
         //val missedCount = sc.accumulator(0, "missedCount")       
 
         // Input
-        val saneRecords = sc.textFile("all/*.csv.gz").
+        val saneRecords = sc.textFile(inputFolder).
             map { _.replaceAll("\"", "").replaceAll(", ", ":").split(",") }.
             filter (flRecord => { flRecord(0) != "YEAR" && FileRecord.isRecordValid(flRecord) && flRecord.length == 110 })
 
