@@ -144,7 +144,7 @@ public class FileRecord {
 		SimpleDateFormat sf = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss");
 		
 		String str1 = year + "-" + month + "-" + day + "T" + HHMM.substring(0, 2) + ":" + HHMM.substring(2, 4) +":00";
-		System.out.println(HHMM + " " + str1);
+		//System.out.println(HHMM + " " + str1);
 		Date date1 = sf.parse(str1);
 		return date1.getTime();
 	}
