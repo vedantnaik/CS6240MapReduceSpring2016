@@ -2,7 +2,8 @@
 
 run:
 	rm -rf out*
-	sbt run
+	mkdir outputPseudo
+	sbt "run all1 outputPseudo/part-out.txt"
 	cat out*/part*
 
 clean:

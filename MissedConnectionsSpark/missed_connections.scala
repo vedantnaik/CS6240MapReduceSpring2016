@@ -5,6 +5,9 @@ import org.apache.spark.rdd.RDD
 
 object MissedConnections {
     def main(args: Array[String]) {
+       val inputFolder = args(0);
+       val outputFile = args(1);
+
        val conf = new SparkConf().
             setAppName("Missed Connections").
             setMaster("local")
@@ -46,7 +49,6 @@ object MissedConnections {
 
         
         var mappedPairs = origins.cogroup(dest)
-        // key : (fields[], fields[])
         
         var reducedOutputInterim = mappedPairs.map(x => { 
             val (k, v) = x;
@@ -80,11 +82,13 @@ object MissedConnections {
             (carYearKey, (missedConnectionsCount, scheduledConnectionsCount))
         } )
 
-        reducedOutputInterim.reduceByKey((aTup, bTup) => (aTup._1 + bTup._1, aTup._2 + bTup._2)).
-        foreach(x => { 
-            val (key, (missedCount, connectionCount)) = x;
-            println(key + " :: " + missedCount + "\t" + connectionCount) })
+        val finalOutput = reducedOutputInterim.
+            reduceByKey((aTup, bTup) => (aTup._1 + bTup._1, aTup._2 + bTup._2)).
+            map(x => { 
+                val (key, (missedCount, connectionCount)) = x;
+                key + " :: " + missedCount + "\t" + connectionCount })
 
+        finalOutput.saveAsTextFile(outputFile)
 
         // Shut down Spark, avoid errors.
         sc.stop()
