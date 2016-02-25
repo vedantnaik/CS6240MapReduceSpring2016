@@ -4,6 +4,7 @@
 .project
 .Rhistory
 /bin/
+/MissedComparisonsSpark/target/*
 LinearRegression/
 Comparisons/
 *.class
@@ -11,3 +12,4 @@ Comparisons/
 *~
 *jar
 *tar.gz
+*.csv.gz

@@ -134,7 +134,7 @@ public class FileRecord {
 	// Author: Vedant Naik
 	// inspired by: http://stackoverflow.com/questions/3056703/simpledateformat
 	public static long getDateFieldInLong(String[] fields, String headerName) throws ParseException{
-		String[] dateFields = fields[csvHeaders.indexOf(FL_DATE)].split("=");
+		String[] dateFields = fields[csvHeaders.indexOf(FL_DATE)].split("-");
 		String year = dateFields[0];
 		String month = dateFields[1];
 		String day = dateFields[2];
@@ -144,6 +144,7 @@ public class FileRecord {
 		SimpleDateFormat sf = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss");
 		
 		String str1 = year + "-" + month + "-" + day + "T" + HHMM.substring(0, 2) + ":" + HHMM.substring(2, 4) +":00";
+		System.out.println(HHMM + " " + str1);
 		Date date1 = sf.parse(str1);
 		return date1.getTime();
 	}
@@ -151,13 +152,30 @@ public class FileRecord {
 	protected static boolean isRecordValid(String[] fields) {
 
 		// Special quick checks for MissingConnections assignment
-		if (fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)].equals("") ||
-			fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)].equals("") ||
-			fields[csvHeaders.indexOf(Field.ARR_TIME)].equals("") ||
-			fields[csvHeaders.indexOf(Field.DEP_TIME)].equals("")){
+
+		String crsArrTime = fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)];
+		String crsDepTime = fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)];
+		String arrTime = fields[csvHeaders.indexOf(Field.ARR_TIME)];
+		String depTime = fields[csvHeaders.indexOf(Field.DEP_TIME)];
+			
+
+		if (crsArrTime.equals("") || crsDepTime.equals("") || arrTime.equals("") || depTime.equals("")){
 			return false;
 		}
 		
+		try{
+			getDateFieldInLong(fields, CRS_ARR_TIME);
+			getDateFieldInLong(fields, CRS_DEP_TIME);
+			getDateFieldInLong(fields, ARR_TIME);
+			getDateFieldInLong(fields, DEP_TIME);
+		} catch (ParseException pe) {
+			System.err.println("Parse Exception");
+			return false;
+		} catch (Exception e) {
+			System.err.println("Exception while converting date to long");
+			return false;
+		}
+
 		
 		float timeZone = 0;
 
@@ -166,8 +184,6 @@ public class FileRecord {
 
 		SimpleDateFormat format = new SimpleDateFormat("HHmm");
 
-		String crsArrTime = fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)];
-		String crsDepTime = fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)];
 		String crsElapsedTime = fields[csvHeaders.indexOf(Field.CRS_ELAPSED_TIME)];
 
 		try {
@@ -258,8 +274,6 @@ public class FileRecord {
 		}
 
 		if (cancelledDigit != 1) {
-			String arrTime = fields[csvHeaders.indexOf(Field.ARR_TIME)];
-			String depTime = fields[csvHeaders.indexOf(Field.DEP_TIME)];
 			String actElapsedTime = fields[csvHeaders.indexOf(Field.ACTUAL_ELAPSED_TIME)];
 
 			try {
