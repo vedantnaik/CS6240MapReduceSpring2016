@@ -1,0 +1,35 @@
+[0m[[0minfo[0m] [0mPackaging /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/missed-connections_2.10-0.1-SNAPSHOT.jar ...[0m
+[0m[[0mdebug[0m] [0mInput file mappings:[0m
+[0m[[0mdebug[0m] [0m	MissedConnections.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$.class[0m
+[0m[[0mdebug[0m] [0m	FileRecord.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/FileRecord.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnectionsUtil.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnectionsUtil.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$4.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$4.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$5.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$5.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$3.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$3.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$7$$anonfun$apply$1$$anonfun$apply$2.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$7$$anonfun$apply$1$$anonfun$apply$2.class[0m
+[0m[[0mdebug[0m] [0m	FileRecord$Field.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/FileRecord$Field.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$7$$anonfun$apply$1.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$7$$anonfun$apply$1.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$6.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$6.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$7.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$7.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$2.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$2.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$9.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$9.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$8.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$8.class[0m
+[0m[[0mdebug[0m] [0m	MissedConnections$$anonfun$1.class[0m
+[0m[[0mdebug[0m] [0m	  /home/vedant/sem4/mr/gitRepo/CS6240MapReduceSpring2016/MissedConnectionsSpark/target/scala-2.10/classes/MissedConnections$$anonfun$1.class[0m
+[0m[[0minfo[0m] [0mDone packaging.[0m
