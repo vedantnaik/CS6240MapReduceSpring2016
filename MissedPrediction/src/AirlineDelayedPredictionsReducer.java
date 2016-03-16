@@ -19,33 +19,34 @@ public class AirlineDelayedPredictionsReducer extends Reducer<Text, AirlineMappe
 		@Override
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
 		
-			Instances trainingInstances = new Instances("Training", RFModelMaker.getAirlineAttributes(), 11); 
-			trainingInstances.setClassIndex(11);
+			RFModelMaker rfModel = new RFModelMaker();
+			Instances trainingInstances = new Instances("Training", rfModel.getAirlineAttributes(), 11); 
+			trainingInstances.setClassIndex(RFModelMaker.Constants.PRED_CLASS_INDEX);
 			
 			System.out.println("Reducer for " + key.toString());
 			
 			for (AirlineMapperValue eachAMVref : listOfAMVs){
 				AirlineMapperValue amv = new AirlineMapperValue(eachAMVref);
 				
-				Instance inst = new DenseInstance(13);
+				Instance inst = new DenseInstance(11);
 				inst.setDataset(trainingInstances);
-				inst.setValue(1, amv.getCrsArrTime().get());
-				inst.setValue(2, amv.getCrsDepTime().get());
-				inst.setValue(3, amv.getQuarter().toString());
-				inst.setValue(4, amv.getOriginAirport().toString());
-				inst.setValue(5, amv.getDestAirport().toString());
-				inst.setValue(6, amv.getCarrier().toString());
-				inst.setValue(7, amv.getDayOfMonth().get());
-				inst.setValue(8, amv.getDayOfWeek().get());
-				inst.setValue(9, amv.getDistanceGroup().get());
-				inst.setValue(10, amv.getIsHoliday().get());
+				inst.setValue(0, (double) amv.getCrsArrTime().get());
+				inst.setValue(1, (double) amv.getCrsDepTime().get());
+				inst.setValue(2, (double) amv.getQuarter().get());
+				inst.setValue(3, (double) amv.getOriginAirport().toString().hashCode());
+				inst.setValue(4, (double) amv.getDestAirport().toString().hashCode());
+				inst.setValue(5, (double) amv.getCarrier().toString().hashCode());
+				inst.setValue(6, (double) amv.getDayOfMonth().get());
+				inst.setValue(7, (double) amv.getDayOfWeek().get());
+				inst.setValue(8, (double) amv.getDistanceGroup().get());
+				inst.setValue(9, (double) amv.getIsHoliday().get());
 	
-				inst.setValue(RFModelMaker.Constants.PRED_CLASS_INDEX, amv.getArrDelay().get());
+				inst.setValue(RFModelMaker.Constants.PRED_CLASS_INDEX, amv.getArrDelay().get()+"");
 				
 				trainingInstances.add(inst);
 			}
 			
-			trainingInstances.setClassIndex(RFModelMaker.Constants.PRED_CLASS_INDEX);
+			//trainingInstances.setClassIndex(RFModelMaker.Constants.PRED_CLASS_INDEX);
 			
 			RandomForest rfClassifer = new RandomForest();
 			try {

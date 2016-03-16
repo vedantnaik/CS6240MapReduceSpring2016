@@ -24,6 +24,8 @@ clearAll:
 
 clearOutput:
 	hadoop fs -rm -r /user/vedant/output*
+	rm -r outputPseudo*
+	rm -r models*
 
 pseudo:
 	mvn clean compile assembly:single
@@ -31,8 +33,8 @@ pseudo:
 	cp target/DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar .
 	hadoop jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData outputPseudo models
 	hadoop fs -get outputPseudo .
+	hadoop fs -get models .
 	cat ${HADOOP_HOME}/pseudoTime.csv
-	cat outputPseudo/part-*
 
 emr:
 	./cloud.sh

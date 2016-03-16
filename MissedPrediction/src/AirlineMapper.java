@@ -18,8 +18,7 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 			
 			if (FileRecord.csvHeaders.size() == fields.length && FileRecord.isRecordValid(fields)){
 				
-				String carMonthKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + ","
-									+ FileRecord.getValueOf(fields,FileRecord.Field.MONTH);
+				String carMonthKey = FileRecord.getValueOf(fields,FileRecord.Field.MONTH);
 				
 				String flightDate = FileRecord.getValueOf(fields, FileRecord.Field.FL_DATE);
 				
@@ -34,7 +33,7 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 						new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DAY_OF_MONTH))),
 						new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DAY_OF_WEEK))),
 						new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DISTANCE_GROUP))),
-						new DoubleWritable(Double.parseDouble(FileRecord.getValueOf(fields, FileRecord.Field.ARR_DELAY))),
+						new DoubleWritable( Double.parseDouble(FileRecord.getValueOf(fields, FileRecord.Field.ARR_DELAY)) > 0 ? 1 : 0 ),
 						new Text(flightDate),
 						new IntWritable(FileRecord.dateIsAroundHoliday(flightDate, 2)));
 							
