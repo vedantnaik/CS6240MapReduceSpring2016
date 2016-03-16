@@ -61,21 +61,8 @@ public class AirlineDelayedPredictionsReducer extends Reducer<Text, AirlineMappe
 				e.printStackTrace();
 			}
 			
-			writeModelToFileSystem(rfClassifer, context, key); 
+			RFModelMaker.writeModelToFileSystem(rfClassifer, context, key); 
 			
-		}
-
-		private void writeModelToFileSystem(RandomForest rfClassifer, Reducer<Text, AirlineMapperValue, Text, Text>.Context context, Text key) throws IOException {
-			Configuration conf = context.getConfiguration();
-			
-			FileSystem fileSystem = FileSystem.get(URI.create(conf.get("rfModelLocation")), conf);
-			FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(conf.get("rfModelLocation")+"/"+key.toString()));				
-			try {
-				SerializationHelper.write(fsDataOutputStream, rfClassifer);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			fsDataOutputStream.close();
 		}
 
 	}

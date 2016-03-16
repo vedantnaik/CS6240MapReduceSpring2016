@@ -1,17 +1,26 @@
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Reducer;
 
+import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.SerializationHelper;
 
 public class RFModelMaker {
 
@@ -55,5 +64,16 @@ public class RFModelMaker {
 		return airlineAttributes;
 	}
 	
-	
+	public static void writeModelToFileSystem(RandomForest rfClassifer, Reducer<Text, AirlineMapperValue, Text, Text>.Context context, Text key) throws IOException {
+		Configuration conf = context.getConfiguration();
+		
+		FileSystem fileSystem = FileSystem.get(URI.create(conf.get("rfModelLocation")), conf);
+		FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(conf.get("rfModelLocation")+"/"+key.toString()));				
+		try {
+			SerializationHelper.write(fsDataOutputStream, rfClassifer);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		fsDataOutputStream.close();
+	}
 }
