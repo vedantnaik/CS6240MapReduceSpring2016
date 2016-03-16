@@ -20,7 +20,7 @@ public class AirlineDelayedPredictionsReducer extends Reducer<Text, AirlineMappe
 		protected void reduce(Text key, Iterable<AirlineMapperValue> listOfAMVs, Context context) throws IOException, InterruptedException {
 		
 			RFModelMaker rfModel = new RFModelMaker();
-			Instances trainingInstances = new Instances("Training", rfModel.getAirlineAttributes(), 11); 
+			Instances trainingInstances = new Instances("Training", rfModel.getAirlineAttributes(), RFModelMaker.Constants.ATTR_SIZE); 
 			trainingInstances.setClassIndex(RFModelMaker.Constants.PRED_CLASS_INDEX);
 			
 			System.out.println("Reducer for " + key.toString());
@@ -61,7 +61,12 @@ public class AirlineDelayedPredictionsReducer extends Reducer<Text, AirlineMappe
 				e.printStackTrace();
 			}
 			
-			RFModelMaker.writeModelToFileSystem(rfClassifer, context, key); 
+			try {
+				RFModelMaker.writeModelToFileSystem(rfClassifer, context, key);
+			} catch (Exception e) {
+				System.err.println("Unable to write model to folder.");
+				e.printStackTrace();
+			}
 			
 		}
 

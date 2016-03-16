@@ -1,7 +1,10 @@
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -14,6 +17,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
+import weka.classifiers.Classifier;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -26,6 +30,7 @@ public class RFModelMaker {
 
 	static class Constants {
 		public static final int PRED_CLASS_INDEX = 10;
+		public static final int ATTR_SIZE = 11;
 		
 		public static final List<String> LOCATIONS = Arrays.asList("ATL", "LAX", "ORD", "DFW", "JFK", "DEN", "SFO", "CLT", "LAS", "PHX", "IAH",
 				"MIA", "SEA", "EWR", "MCO", "MSP", "DTW", "BOS", "PHL", "LGA", "FLL", "BWI", "IAD", "MDW", "SLC", "DCA",
@@ -64,16 +69,34 @@ public class RFModelMaker {
 		return airlineAttributes;
 	}
 	
-	public static void writeModelToFileSystem(RandomForest rfClassifer, Reducer<Text, AirlineMapperValue, Text, Text>.Context context, Text key) throws IOException {
+	public static void writeModelToFileSystem(RandomForest rfClassifer, Reducer<Text, AirlineMapperValue, Text, Text>.Context context, Text key) throws Exception {
 		Configuration conf = context.getConfiguration();
 		
-		FileSystem fileSystem = FileSystem.get(URI.create(conf.get("rfModelLocation")), conf);
-		FSDataOutputStream fsDataOutputStream = fileSystem.create(new Path(conf.get("rfModelLocation")+"/"+key.toString()));				
-		try {
-			SerializationHelper.write(fsDataOutputStream, rfClassifer);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		String modelFolder = conf.get("rfModelLocation");
+		FileSystem fileSystem = FileSystem.get(URI.create(modelFolder), conf);
+		
+		Path modelPath = new Path(modelFolder+"/modelForMonth"+key.toString());		
+		FSDataOutputStream fsDataOutputStream = fileSystem.create(modelPath);				
+		SerializationHelper.write(fsDataOutputStream, rfClassifer);
+		
 		fsDataOutputStream.close();
 	}
+	
+	public static HashMap<String, Classifier> getModelsFromFileSystem(String modelFolder) throws Exception {
+		HashMap<String,Classifier> storedModels = new HashMap<String,Classifier>();		
+		File modelDir = new File(modelFolder);
+
+		for (File model : modelDir.listFiles()) {
+			FileInputStream fileInputStream;
+			fileInputStream = new FileInputStream(model);
+			Classifier csfr = (Classifier) SerializationHelper.read(fileInputStream);
+			
+			storedModels.put(model.getName().replaceAll("modelForMonth", ""), csfr);
+			
+			fileInputStream.close();
+		}
+		
+		return storedModels;
+	}
+
 }
