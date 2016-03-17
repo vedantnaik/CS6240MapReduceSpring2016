@@ -18,11 +18,15 @@ public class RFPredictorMapper extends Mapper<Object, Text, Text, AirlineMapperV
 		correctedString = correctedString.substring(correctedString.indexOf(",")+1);
 		String[] fields = correctedString.split(",");
 		
+		if(!FileRecord.isTestRecordValid(fields)){
+			return;
+		}
+		
 		String monthKey = FileRecord.getValueOf(fields,FileRecord.Field.MONTH);
 		
 		String flightDate = FileRecord.getValueOf(fields, FileRecord.Field.FL_DATE);
 		AirlineMapperValue amv;
-		// TODO: try sainty
+		
 		try {
 			amv = new AirlineMapperValue(
 				new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.CRS_ARR_TIME))),

@@ -18,7 +18,7 @@ public class RFPredictoReducer extends Reducer<Text, AirlineMapperValue, Text, T
 		Classifier rfClassifier = null;
 		try {
 			 rfClassifier = RFModelMaker.getMonthModelFromFileSystem(context, key);
-			 if(rfClassifier == null) {return;}
+			 if(rfClassifier == null) {System.err.println("CLASSIFIER MISSING!! month : " + key.toString()); return;}
 		} catch (Exception e) {
 			System.err.println("Problem reading the model for month " + key.toString());
 			e.printStackTrace();

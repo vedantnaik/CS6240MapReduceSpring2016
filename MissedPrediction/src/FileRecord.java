@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang.math.NumberUtils;
+
 /*
  * Authors: Vedant Naik, Rohan Joshi
  * */
@@ -108,7 +110,76 @@ public class FileRecord {
 	protected static String getValueOf(String[] fields, String headerName) {
 		return fields[csvHeaders.indexOf(headerName)];
 	}
-
+	
+	protected static boolean isValidationRecordValid(String[] validRecords){
+		boolean valIsCorrect = validRecords[1].equalsIgnoreCase("TRUE") || validRecords[1].equalsIgnoreCase("FALSE");
+		
+		String[] flnum_fldate_crsDep = validRecords[0].split("_");
+		
+		boolean keyIsCorrect = NumberUtils.isDigits(flnum_fldate_crsDep[0]) 
+				&& flnum_fldate_crsDep[1].matches("\\d{4}-\\d{2}-\\d{2}")
+				&& NumberUtils.isDigits(flnum_fldate_crsDep[2]);
+		
+		if(keyIsCorrect && valIsCorrect){
+			return true;
+		}
+		
+		return false;
+	}
+	
+	protected static boolean isTestRecordValid(String[] fields) {
+		
+		if(fields[csvHeaders.indexOf(Field.MONTH)].equals("") || fields[csvHeaders.indexOf(Field.MONTH)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.FL_DATE)].equals("") || fields[csvHeaders.indexOf(Field.FL_DATE)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)].equals("") || fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)].equals("") || fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.QUARTER)].equals("") || fields[csvHeaders.indexOf(Field.QUARTER)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.ORIGIN)].equals("") || fields[csvHeaders.indexOf(Field.ORIGIN)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.DEST)].equals("") || fields[csvHeaders.indexOf(Field.DEST)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.CARRIER)].equals("") || fields[csvHeaders.indexOf(Field.CARRIER)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.FL_NUM)].equals("") || fields[csvHeaders.indexOf(Field.FL_NUM)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.DAY_OF_MONTH)].equals("") || fields[csvHeaders.indexOf(Field.DAY_OF_MONTH)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.DAY_OF_WEEK)].equals("") || fields[csvHeaders.indexOf(Field.DAY_OF_WEEK)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		if(fields[csvHeaders.indexOf(Field.DISTANCE_GROUP)].equals("") || fields[csvHeaders.indexOf(Field.DISTANCE_GROUP)].equalsIgnoreCase("NA")){
+			return false;
+		}
+		
+		return true;
+	}
+	
 	protected static boolean isRecordValid(String[] fields) {
 
 		// Special quick checks for MissingConnections assignment
