@@ -1,10 +1,5 @@
 import java.io.IOException;
-import java.net.URI;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
@@ -12,7 +7,6 @@ import weka.classifiers.trees.RandomForest;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.SerializationHelper;
 
 public class AirlineDelayedPredictionsReducer extends Reducer<Text, AirlineMapperValue, Text, Text> {
 		
@@ -28,7 +22,7 @@ public class AirlineDelayedPredictionsReducer extends Reducer<Text, AirlineMappe
 			for (AirlineMapperValue eachAMVref : listOfAMVs){
 				AirlineMapperValue amv = new AirlineMapperValue(eachAMVref);
 				
-				Instance inst = new DenseInstance(11);
+				Instance inst = new DenseInstance(RFModelMaker.Constants.ATTR_SIZE);
 				inst.setDataset(trainingInstances);
 				inst.setValue(0, (double) amv.getCrsArrTime().get());
 				inst.setValue(1, (double) amv.getCrsDepTime().get());
@@ -42,8 +36,10 @@ public class AirlineDelayedPredictionsReducer extends Reducer<Text, AirlineMappe
 				inst.setValue(9, (double) amv.getIsHoliday().get());
 	
 				inst.setValue(RFModelMaker.Constants.PRED_CLASS_INDEX, amv.getArrDelay().get()+"");
-				
+	
 				trainingInstances.add(inst);
+				inst = null;
+				amv = null;
 			}
 			
 			//trainingInstances.setClassIndex(RFModelMaker.Constants.PRED_CLASS_INDEX);
@@ -52,7 +48,7 @@ public class AirlineDelayedPredictionsReducer extends Reducer<Text, AirlineMappe
 			try {
 				rfClassifer.setMaxDepth(5);
 //				rfClassifer.setDebug(false);
-				rfClassifer.setNumTrees(12);
+				rfClassifer.setNumTrees(9);
 				
 				rfClassifer.buildClassifier(trainingInstances);
 				
@@ -67,7 +63,7 @@ public class AirlineDelayedPredictionsReducer extends Reducer<Text, AirlineMappe
 				System.err.println("Unable to write model to folder.");
 				e.printStackTrace();
 			}
-			
+			rfClassifer = null;
 		}
 
 	}

@@ -22,20 +22,39 @@ clearAll:
 	hadoop fs -rm -r /user/vedant*
 	clear
 
-clearOutput:
-	hadoop fs -rm -r /user/vedant/output*
+clearPredictions:
+	hadoop fs -rm -r /user/vedant/predOutput*
+
+clearAllOutput:
+	hadoop fs -rm -r /user/vedant/trainPseudo*
+	hadoop fs -rm -r /user/vedant/predOutput*
+	hadoop fs -rm -r /user/vedant/trainPseudo*
+
+clearLocal:
 	rm -r outputPseudo*
 	rm -r models*
 
-pseudo:
+createJarWithDependencies:
 	mvn clean compile assembly:single
 	touch ${HADOOP_HOME}/pseudoTime.csv
 	cp target/DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar .
-	hadoop jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData outputPseudo models
-	hadoop fs -get outputPseudo .
-	hadoop fs -get models .
-	cat ${HADOOP_HOME}/pseudoTime.csv
 
+completePseudo:
+	hadoop jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData trainPseudo models training
+	hadoop jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData predOutput models testing
+	hadoop fs -get predOutput .
+	java -jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData predOutput models evaluation validateData/98validate.csv.gz
+
+pseudo:
+	hadoop jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData outputPseudo models training
+	
+pseudoTest:
+	hadoop jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData predOutput models testing
+	hadoop fs -get predOutput .
+	
+localComparison:
+	java -jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData predOutput models evaluation validateData/98validate.csv.gz
+										
 emr:
 	./cloud.sh
 

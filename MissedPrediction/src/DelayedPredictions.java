@@ -31,24 +31,37 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 public class DelayedPredictions {
 
 	public static void main(String[] args) {
-
+		
 		for(String a : args)
 			System.out.println(a);
 		
-		if(args.length != 5){
+		if(args.length < 6 || args.length > 7){
+			System.out.println(args.length + " ");
 			displayUsageAndExit();
 		}
 		
 		String runType = args[0];
+		String predictionMode = args[5];
+		
+		if(!(areParamsValid(runType))){
+			displayUsageAndExit();
+		}		
+		
+		if(predictionMode.equalsIgnoreCase("testing")){
+			RFPredictor.main(args);
+			System.exit(0);
+		}
+		
+		if(predictionMode.equalsIgnoreCase("evaluation")){
+			ComparePredictions.main(args);
+			System.exit(0);
+		}
+		
 		String inputTrainPath = args[1];
 		String inputTestPath = args[2];
 		String outputPath = args[3];
 		String rfModel = args[4];
-		
-		if(!(areParamsValid(runType))){
-			displayUsageAndExit();
-		}
-		
+
 		long startTime = System.currentTimeMillis();
 
 		Configuration conf = new Configuration();
@@ -123,7 +136,7 @@ public class DelayedPredictions {
 	}
 
 	
-	private static void displayUsageAndExit() {
+	public static void displayUsageAndExit() {
 		System.err.println("Invalid inputs given.");
 		System.err.println("USAGE:");
 		
@@ -143,10 +156,16 @@ public class DelayedPredictions {
 		System.err.println("\narg 4:");
 		System.err.println("\t<Path to random forest model>");
 		
+		System.err.println("\narg 5:");
+		System.err.println("\t<training or testing or evaluation>");
+		
+		System.err.println("\narg 6:");
+		System.err.println("\t<Path to validation file>");
+		
 		System.exit(-1);
 	}
 	
-	private static boolean areParamsValid(String runType) {
+	public static boolean areParamsValid(String runType) {
 		return runType.equalsIgnoreCase("-pseudo") || runType.equalsIgnoreCase("-emr");
 	}
 }

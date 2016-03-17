@@ -331,7 +331,7 @@ public class FileRecord {
 			int hdd = Integer.parseInt(hday_yyyyMMdd[2]);
 				
 			if(mm == hmm){
-				if(((hdd - dayBuffer) < dd) || (dd < (hdd + dayBuffer))){
+				if((hdd - dayBuffer) < dd && dd < (hdd + dayBuffer)){
 					return 1;
 				}
 			}

@@ -149,8 +149,8 @@ public class AirlineMapperValue implements Writable {
 	public String toString() {
 		return 
 				"["
-				+ "crsArr:" + new Date(crsArrTime.get()).toString() + " "
-				+ "crsDep:" + new Date(crsDepTime.get()).toString() + " "
+				+ "crsArr:" + crsArrTime.get() + " "
+				+ "crsDep:" + crsDepTime.get() + " "
 				+ "actualArr:" + quarter.get() + " "
 
 				+ "originAirportId: " + originAirport.toString() + " "

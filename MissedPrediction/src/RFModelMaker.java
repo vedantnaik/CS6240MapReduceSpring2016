@@ -1,6 +1,8 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,6 +82,19 @@ public class RFModelMaker {
 		SerializationHelper.write(fsDataOutputStream, rfClassifer);
 		
 		fsDataOutputStream.close();
+	}
+	
+	public static Classifier getMonthModelFromFileSystem(Reducer<Text, AirlineMapperValue, Text, Text>.Context context, Text key) throws Exception {
+		Configuration conf = context.getConfiguration();
+		
+		String modelFolder = conf.get("rfModelLocation");
+		
+		Path modelPath = new Path(modelFolder+"/modelForMonth"+key.toString());
+        FileSystem fileSystem = FileSystem.get(conf);
+        
+        RandomForest rfClassifer = (RandomForest) SerializationHelper.read(fileSystem.open(modelPath));
+        
+		return rfClassifer;
 	}
 	
 	public static HashMap<String, Classifier> getModelsFromFileSystem(String modelFolder) throws Exception {
