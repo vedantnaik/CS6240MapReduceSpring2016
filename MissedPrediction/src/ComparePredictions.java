@@ -90,24 +90,30 @@ public class ComparePredictions {
 			long recordCountNotInPred = 0;
 			
 			for (String pKey : validationMap.keySet()){
+				if (DEBUG_predMap.containsKey(pKey)){
 					
-    			boolean flightDelayActualValue = validationMap.get(pKey);
-    			boolean flightDelayPrediction = (DEBUG_predMap.containsKey(pKey) ? DEBUG_predMap.get(pKey) : false); 
-    			
-    			if (flightDelayActualValue){
-    				if (flightDelayPrediction){
-    					truePositive++;
-    				} else {
-    					falseNegative++;
-    				}
-    			} else {
-    				if (flightDelayPrediction){
-    					falsePositive++;
-    				} else {
-    					trueNegative++;
-    				}
-    			}
-	    		
+					
+	    			boolean flightDelayActualValue = validationMap.get(pKey);
+	    			boolean flightDelayPrediction = DEBUG_predMap.get(pKey); 
+	    			
+	    			if (flightDelayActualValue){
+	    				if (flightDelayPrediction){
+	    					truePositive++;
+	    				} else {
+	    					falseNegative++;
+	    				}
+	    			} else {
+	    				if (flightDelayPrediction){
+	    					falsePositive++;
+	    				} else {
+	    					trueNegative++;
+	    				}
+	    			}
+	    		}
+				else {
+					
+					recordCountNotInPred++;
+				}
 			}
 			
 			double recall = (double) truePositive / (truePositive + falseNegative) * 100;
