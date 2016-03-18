@@ -43,6 +43,8 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 				String destinationId;
 				String carrierId;
 				String crsElapsedTime;
+				String dest;
+				String origin;
 				
 				try {
 					// Store java date in long so that it will help in finding connections that span over days and months
@@ -68,6 +70,8 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 				destinationId = (FileRecord.getValueOf(fields, FileRecord.Field.DEST_AIRPORT_ID));
 				carrierId = (FileRecord.getValueOf(fields,FileRecord.Field.CARRIER));
 				crsElapsedTime = FileRecord.getValueOf(fields, FileRecord.Field.CRS_ELAPSED_TIME);
+				dest = FileRecord.getValueOf(fields, FileRecord.Field.DEST);
+				origin = FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN);
 				
 				// make for dest
 				AirlineMapperValue amvDest = new AirlineMapperValue(
@@ -95,7 +99,9 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 						new Text(carrierId), 
 						new Text(day), 
 						new Text(month), 
-						new Text(crsElapsedTime)
+						new Text(crsElapsedTime),
+						new Text(dest),
+						new Text(origin)
 						);
 							
 				String carDestYearMonthKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + 
@@ -131,7 +137,9 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 						new Text(carrierId), 
 						new Text(day), 
 						new Text(month), 
-						new Text(crsElapsedTime)
+						new Text(crsElapsedTime),
+						new Text(dest),
+						new Text(origin)
 						);
 							
 				String carOrigYearMonthKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + 

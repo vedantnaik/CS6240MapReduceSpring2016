@@ -43,6 +43,8 @@ public class AirlineMapperValue implements Writable {
 	Text day;
 	Text month;
 	Text crsElapsedTime;
+	Text dest;
+	Text origin;
 	
 	
 	public AirlineMapperValue(){
@@ -66,6 +68,8 @@ public class AirlineMapperValue implements Writable {
 	
 		this.flDate = new Text();
 		this.isHoliday = new IntWritable();
+		this.dest = new Text();
+		this.origin = new Text();
 	}
 	
 
@@ -74,7 +78,7 @@ public class AirlineMapperValue implements Writable {
 			IntWritable dayOfWeek, IntWritable distanceGroup, DoubleWritable arrDelay, Text flDate, 
 			IntWritable isHoliday, Text connectionLink, LongWritable crsArrTime_long, LongWritable crsDepTime_long,
 			LongWritable actualArrTime_long, LongWritable actualDepTime_long, Text distance, Text originId, Text destinationId, 
-			Text carrierId, Text day, Text month, Text crsElapsedTime) {
+			Text carrierId, Text day, Text month, Text crsElapsedTime, Text dest, Text origin) {
 		super();
 		this.crsArrTime = crsArrTime;
 		this.crsDepTime = crsDepTime;
@@ -101,6 +105,8 @@ public class AirlineMapperValue implements Writable {
 		this.day = day;
 		this.month = month;
 		this.crsElapsedTime = crsElapsedTime;
+		this.dest = dest;
+		this.origin = origin;
 	}
 
 
@@ -138,6 +144,8 @@ public class AirlineMapperValue implements Writable {
 		this.day = new Text(amv.getDay().toString());
 		this.month = new Text(amv.getMonth().toString());
 		this.crsElapsedTime = new Text(amv.getCrsElapsedTime());
+		this.dest = new Text(amv.getDest());
+		this.origin = new Text(amv.getOrigin());
 	}
 	
 	@Override
@@ -175,6 +183,8 @@ public class AirlineMapperValue implements Writable {
 		day.readFields(inVal);
 		month.readFields(inVal);
 		crsElapsedTime.readFields(inVal);
+		dest.readFields(inVal);
+		origin.readFields(inVal);
 	}
 
 	@Override
@@ -212,6 +222,8 @@ public class AirlineMapperValue implements Writable {
 		day.write(outVal);
 		month.write(outVal);
 		crsElapsedTime.write(outVal);
+		dest.write(outVal);
+		origin.write(outVal);
 	}
 
 	@Override
@@ -241,6 +253,26 @@ public class AirlineMapperValue implements Writable {
 						
 				+ "]";
 	}
+
+	public Text getOrigin() {
+		return origin;
+	}
+
+
+	public void setOrigin(Text origin) {
+		this.origin = origin;
+	}
+
+
+	public Text getDest() {
+		return dest;
+	}
+
+
+	public void setDest(Text dest) {
+		this.dest = dest;
+	}
+
 
 	public IntWritable getCrsArrTime() {
 		return crsArrTime;
