@@ -49,7 +49,7 @@ public class RFPredictoReducer extends Reducer<Text, AirlineMapperValue, Text, T
 			
 			String uniqueFlightKey = amv.getFlNum().get()
 								+"_"+ amv.getFlDate().toString()
-								+"_"+ amv.getCrsDepTime().get();
+								+"_"+ FileRecord.makeCompleteHHMM(amv.getCrsDepTime().get() + "");
 			
 			String predValString;
 			try {
