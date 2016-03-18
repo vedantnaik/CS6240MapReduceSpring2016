@@ -53,14 +53,13 @@ public class RFPredictoReducer extends Reducer<Text, AirlineMapperValue, Text, T
 			
 			String predValString;
 			try {
-				predValString = (rfClassifier.classifyInstance(inst) == 1.0 ? "TRUE" : "TRUE");
+				predValString = (rfClassifier.classifyInstance(inst) == 1.0 ? "TRUE" : "FALSE");
 			} catch (Exception e) {
-				System.err.println("failed to predict for flight " + uniqueFlightKey);
+				System.err.println("Unable to predict for flight " + uniqueFlightKey);
 				e.printStackTrace();
-				return;
+				continue;
 			}
 			
-//			System.out.println(uniqueFlightKey + " : " + predValString);
 			context.write(new Text(uniqueFlightKey), new Text(predValString));
 			
 		}

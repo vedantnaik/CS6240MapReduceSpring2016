@@ -14,8 +14,6 @@ public class ComparePredictions {
 
 	public static void main(String[] args) {
 		
-		long chutValidCount = 0;
-		
 		String predictionFolder = args[3];
 		String validationFile = args[6];
 		
@@ -33,13 +31,11 @@ public class ComparePredictions {
 	    	String validationEntryString;
 	    	
 	    	while((validationEntryString = validationBuffered.readLine())!=null){
+	    		if(validationEntryString.length() == 0) {continue;}
 	    		String validationEntry[] = validationEntryString.split(",");
 	    		if(FileRecord.isValidationRecordValid(validationEntry)){
 	    			validationMap.put(validationEntry[0], validationEntry[1].equalsIgnoreCase("TRUE"));	    			
-	    		} else {
-	    			chutValidCount++;
 	    		}
-	    		
 	    	}
 	    	
 	    	validationBuffered.close();
@@ -55,11 +51,10 @@ public class ComparePredictions {
 	    	long falsePositive = 0;
 	    	long trueNegative = 0;
 
-	    	// debig
-	    	long DEBUG_validationNotFoundCount = 0;
+	    	// debug
 	    	long DEBUG_partFileCount = 0;
 	    	HashMap<String, Boolean> DEBUG_predMap = new HashMap<String, Boolean>();
-	    	ArrayList<String> keysNotInVal = new ArrayList<String>();
+	    	ArrayList<String> DEBUG_keysNotInVal = new ArrayList<String>();
 	    	
 	    	File predDir = new File(predictionFolder);
 
@@ -72,68 +67,57 @@ public class ComparePredictions {
 
 		    	String partFIleEntryString;
 		    	
-		    	while((partFIleEntryString = partFileBuffered.readLine())!=null){
-		    		
-//		    		System.out.println(partFIleEntryString);
+		    	while((partFIleEntryString = partFileBuffered.readLine()) != null){
 		    		String predictionEntry[] = partFIleEntryString.split("\t");
 		    		String uniqueFlightKey = predictionEntry[0];
 		    		boolean flightDelayPrediction = predictionEntry[1].equalsIgnoreCase("TRUE");
 		    		
 		    		if(!validationMap.containsKey(uniqueFlightKey)){
-		    			keysNotInVal.add(uniqueFlightKey);
+		    			DEBUG_keysNotInVal.add(uniqueFlightKey);
 		    		}
 		    		
 		    		DEBUG_partFileCount++;
 		    		DEBUG_predMap.put(uniqueFlightKey, flightDelayPrediction);
-		    		
 		    	}		    	
 		    	
 		    	partFileBuffered.close();
-		    	partFileBuffered.close();
+		    	partFileDecoder.close();
 		    	partFileInputStream.close();
 			}
 			
 			
 			System.out.println("Calculating confusion matrix..");
-			ArrayList<String> keysNotInPred = new ArrayList<String>();
+			long recordCountNotInPred = 0;
 			
-			for (String pKey : DEBUG_predMap.keySet()){
-				if (validationMap.containsKey(pKey)){
-	    			boolean flightDelayActualValue = validationMap.get(pKey);
-	    			boolean flightDelayPrediction = DEBUG_predMap.get(pKey); 
-	    			
-	    			if (flightDelayActualValue){
-	    				if (flightDelayPrediction){
-	    					truePositive++;
-	    				} else {
-	    					falseNegative++;
-	    				}
-	    			} else {
-	    				if (flightDelayPrediction){
-	    					falsePositive++;
-	    				} else {
-	    					trueNegative++;
-	    				}
-	    			}
-	    		}				
+			for (String pKey : validationMap.keySet()){
+					
+    			boolean flightDelayActualValue = validationMap.get(pKey);
+    			boolean flightDelayPrediction = (DEBUG_predMap.containsKey(pKey) ? DEBUG_predMap.get(pKey) : false); 
+    			
+    			if (flightDelayActualValue){
+    				if (flightDelayPrediction){
+    					truePositive++;
+    				} else {
+    					falseNegative++;
+    				}
+    			} else {
+    				if (flightDelayPrediction){
+    					falsePositive++;
+    				} else {
+    					trueNegative++;
+    				}
+    			}
+	    		
 			}
 			
-//			System.out.println("Print missing common keys (if any) with  >>>...");
-//			for (String pkey : keysNotInPred){
-//				if (keysNotInVal.contains(pkey)){
-//					System.out.println(">>> " + pkey);
-//				}
-//			}
-			
-			
-			double recall = (double) truePositive / (truePositive + falseNegative);
-			double precision = (double) truePositive / (truePositive + falsePositive);
-			double accuracy = (double) (truePositive + trueNegative) / (truePositive + falsePositive + trueNegative + falseNegative);
+			double recall = (double) truePositive / (truePositive + falseNegative) * 100;
+			double precision = (double) truePositive / (truePositive + falsePositive) * 100;
+			double accuracy = (double) (truePositive + trueNegative) / (truePositive + falsePositive + trueNegative + falseNegative) * 100;
 			
 			System.out.println("Final Result...");
-			System.out.println("Precision : "+ precision);
-			System.out.println("Recall : "+ recall);
-			System.out.println("Accuracy : "+ accuracy);
+			System.out.println("Precision : "+ precision + " %");
+			System.out.println("Recall : "+ recall + " %");
+			System.out.println("Accuracy : "+ accuracy + " %");
 			
 			System.out.println("True Positive: " + truePositive);
 			System.out.println("False Negative: " + falseNegative);
@@ -141,11 +125,10 @@ public class ComparePredictions {
 			System.out.println("False Positive: " + falsePositive);
 			
 			////////////////////////////
-			System.out.println("DEBUG_validationNotFoundCount : " + DEBUG_validationNotFoundCount);
-			System.out.println("validationMap size : " + validationMap.size());
+			System.out.println("\nvalidationMap size : " + validationMap.size());
 			System.out.println("DEBUG_partFileCount  : " + DEBUG_partFileCount );
 			System.out.println("DEBUG_predMap size " + DEBUG_predMap.size());
-			System.out.println("chutValidCount : " + chutValidCount);
+			System.out.println("COUNT of records not in pred: " + recordCountNotInPred + "\n");
 			////////////////////////////
 			
 			PrintWriter writer = new PrintWriter("evalOutput/confusionMatrix.txt", "UTF-8");
@@ -154,9 +137,9 @@ public class ComparePredictions {
 			writer.println("True Negative: " + trueNegative);
 			writer.println("False Positive: " + falsePositive);
 			
-			writer.println("Precision :"+ precision);
-			writer.println("Recall :"+ recall);
-			writer.println("Accuracy :"+ accuracy);
+			writer.println("Precision :"+ precision + "%");
+			writer.println("Recall :"+ recall + "%");
+			writer.println("Accuracy :"+ accuracy + "%");
 			
 			writer.close();
 			

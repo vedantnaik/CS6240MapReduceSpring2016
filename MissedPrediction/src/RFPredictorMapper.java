@@ -43,7 +43,7 @@ public class RFPredictorMapper extends Mapper<Object, Text, Text, AirlineMapperV
 				new Text(flightDate),
 				new IntWritable(FileRecord.dateIsAroundHoliday(flightDate, 2)));
 		} catch (NumberFormatException e) {
-		  return;
+			return;
 		}
 		
 		context.write(new Text(monthKey), amv);

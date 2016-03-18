@@ -49,6 +49,7 @@ pseudo:
 	hadoop jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData outputPseudo models training
 	
 pseudoTest:
+	hadoop fs -rm -r /user/vedant/predOutput*
 	hadoop jar DelayedPredictions-0.0.1-SNAPSHOT-jar-with-dependencies.jar -pseudo input/all input/testData predOutput models testing
 	hadoop fs -get predOutput .
 	
