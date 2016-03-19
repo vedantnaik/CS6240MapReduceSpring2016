@@ -53,7 +53,7 @@ public class AirlineRoutingReducer extends Reducer<Text, AirlineMapperValue, Tex
 		}
 		
 		for (AirlineMapperValue incoming_amv : Dest_listOfAMVs){
-		
+			
 			/*Instance inst = new DenseInstance(RFModelMaker.Constants.ATTR_SIZE);
 			inst.setDataset(testingInstances);
 			inst.setValue(0, (double) incoming_amv.getCrsArrTime().get());
@@ -113,9 +113,11 @@ public class AirlineRoutingReducer extends Reducer<Text, AirlineMapperValue, Tex
 						// output of the format:
 						//Origin Dest    incoming flnum   outgoing flnum   duration of two legs
 						// NY     BOS <=>     xxxx       +    xxxx       +      3000
-						System.out.println("inside n square:: " + sumDuration);
-						context.write(new Text(incoming_amv.getOrigin() + "\t" + outgoing_amv.getDest()), 
-									new Text(incoming_amv.getFlNum() + "\t" + outgoing_amv.getFlNum() + "\t" + sumDuration));
+						// System.out.println("inside n square:: " + sumDuration);
+						context.write(new Text(incoming_amv.getOrigin().toString() + "\t" + outgoing_amv.getDest().toString()), 
+									new Text(incoming_amv.getFlNum().toString() + "\t" + outgoing_amv.getFlNum().toString() + "\t" + sumDuration + "\t"
+											+ incoming_amv.getYear().toString() + "\t" + incoming_amv.getMonth().toString() + "\t" + incoming_amv.getDayOfMonth().toString()
+											));
 					}
 				} 
 			}

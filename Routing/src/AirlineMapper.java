@@ -106,8 +106,8 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 						new Text(month), 
 						new Text(crsElapsedTime),
 						new Text(dest),
-						new Text(origin)
-						);
+						new Text(origin),
+						new Text(year));
 							
 				String carDestYearMonthKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + 
 						FileRecord.getValueOf(fields, FileRecord.Field.DEST) + "\t" +
@@ -140,8 +140,8 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 						new Text(month), 
 						new Text(crsElapsedTime),
 						new Text(dest),
-						new Text(origin)
-						);
+						new Text(origin),
+						new Text(year));
 							
 				String carOrigYearMonthKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + 
 						FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN) + "\t" +

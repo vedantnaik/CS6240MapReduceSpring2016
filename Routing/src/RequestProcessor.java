@@ -1,78 +1,21 @@
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BooleanWritable;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-/*
- * -------------------------------------------------------------------------------------------------------
- * 										ROUTING - MAIN CLASS
- * 
- * This is the main class for routing.  Usage:
- * arg 0 : -emr or -pseudo: This decides whether the program runs on the pseudo mode or emr mode
- * arg 1 : path to the training data input
- * arg 2 : Path to the testing data input
- * arg 3 : Output folder
- * arg 4 : Path to the folder containing the model files
- * arg 5 : training or process or evaluation : This decides whether the program is training the model,
- * 			processing the request file to generate itineraries or evaluating the itineraries agains the
- * 			validation file
- * arg 6 : Validation file => 04missed.csv.gz
- * 
- * -------------------------------------------------------------------------------------------------------
- */
-
-public class Routing {
+public class RequestProcessor {
 
 	public static void main(String[] args) {
-		
-		for(String a : args)
-			System.out.println(a);
-		
-		if(args.length < 6 || args.length > 7){
-			System.out.println(args.length + " ");
-			displayUsageAndExit();
-		}
-		
+		System.out.println("Request processor");
 		String runType = args[0];	// -emr or -pseudo
-		String predictionMode = args[5]; // training or processRequest or evaluation
-		
-		if(!(areParamsValid(runType))){
-			displayUsageAndExit();
-		}		
-		
-		if(predictionMode.equalsIgnoreCase("processRequest")){
-			RequestProcessor.main(args);
-			System.exit(0);
-		}
-		
-		if(predictionMode.equalsIgnoreCase("evaluation")){
-			CompareResults.main(args);
-			System.exit(0);
-		}
+		String predictionMode = args[5]; // train or test or evaluate
 		
 		String inputTrainPath = args[1];
 		String inputTestPath = args[2];
@@ -89,14 +32,14 @@ public class Routing {
 		
 		try {
 			Job job = Job.getInstance(conf);
-			job.setJobName("Routing");
-			job.setJarByClass(Routing.class);
+			job.setJobName("RequestProcessor");
+			job.setJarByClass(RequestProcessor.class);
 			
-			job.setMapperClass(AirlineMapper.class);
-			job.setReducerClass(AirlineRoutingReducer.class);
+			job.setMapperClass(RequestProcessorMapper.class);
+			job.setReducerClass(RequestProcessorReducer.class);
 			
 			job.setMapOutputKeyClass(Text.class);
-			job.setMapOutputValueClass(AirlineMapperValue.class);
+			job.setMapOutputValueClass(Text.class);
 			
 			job.setOutputKeyClass(Text.class);
 			job.setOutputValueClass(Text.class);			

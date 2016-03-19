@@ -47,7 +47,7 @@ public class RFModelMaker {
 	private static ArrayList<Attribute> airlineAttributes;
 	
 	public RFModelMaker() {
-		
+		System.out.println("entering model maker");
 		airlineAttributes = new ArrayList<Attribute>();
 		
 		airlineAttributes.add(new Attribute("crsArrTime"));

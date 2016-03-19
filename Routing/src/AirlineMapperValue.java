@@ -41,6 +41,7 @@ public class AirlineMapperValue implements Writable {
 	Text crsElapsedTime;
 	Text dest;
 	Text origin;
+	Text year;
 	
 	
 	public AirlineMapperValue(){
@@ -71,6 +72,8 @@ public class AirlineMapperValue implements Writable {
 		this.isHoliday = new IntWritable();
 		this.dest = new Text();
 		this.origin = new Text();
+		this.year = new Text();
+		
 	}
 	
 // removed: ARR_DELAY
@@ -79,7 +82,7 @@ public class AirlineMapperValue implements Writable {
 			IntWritable dayOfWeek, IntWritable distanceGroup, Text flDate, 
 			IntWritable isHoliday, Text connectionLink, LongWritable crsArrTime_long, LongWritable crsDepTime_long,
 			Text distance,  
-			Text carrierId, Text day, Text month, Text crsElapsedTime, Text dest, Text origin) {
+			Text carrierId, Text day, Text month, Text crsElapsedTime, Text dest, Text origin, Text year) {
 		super();
 		this.crsArrTime = crsArrTime;
 		this.crsDepTime = crsDepTime;
@@ -106,6 +109,7 @@ public class AirlineMapperValue implements Writable {
 		this.crsElapsedTime = crsElapsedTime;
 		this.dest = dest;
 		this.origin = origin;
+		this.year = year;
 	}
 
 
@@ -141,6 +145,7 @@ public class AirlineMapperValue implements Writable {
 		this.crsElapsedTime = new Text(amv.getCrsElapsedTime());
 		this.dest = new Text(amv.getDest());
 		this.origin = new Text(amv.getOrigin());
+		this.year = new Text(amv.getYear());
 	}
 	
 	@Override
@@ -176,6 +181,7 @@ public class AirlineMapperValue implements Writable {
 		crsElapsedTime.readFields(inVal);
 		dest.readFields(inVal);
 		origin.readFields(inVal);
+		year.readFields(inVal);
 	}
 
 	@Override
@@ -211,6 +217,7 @@ public class AirlineMapperValue implements Writable {
 		crsElapsedTime.write(outVal);
 		dest.write(outVal);
 		origin.write(outVal);
+		year.write(outVal);
 	}
 
 	@Override
@@ -434,4 +441,29 @@ public class AirlineMapperValue implements Writable {
 		this.crsDepTime_long = crsDepTime_long;
 	}
 
+	public DoubleWritable getArrDelay() {
+		return arrDelay;
+	}
+
+	public void setArrDelay(DoubleWritable arrDelay) {
+		this.arrDelay = arrDelay;
+	}
+
+	public Text getYear() {
+		return year;
+	}
+
+	public void setYear(Text year) {
+		this.year = year;
+	}
+
+	public void setCrsArrTime_long(LongWritable crsArrTime_long) {
+		this.crsArrTime_long = crsArrTime_long;
+	}
+
+	public void setCrsDepTime_long(LongWritable crsDepTime_long) {
+		this.crsDepTime_long = crsDepTime_long;
+	}
+
+	
 }
