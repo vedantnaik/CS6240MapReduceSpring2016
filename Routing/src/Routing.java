@@ -89,7 +89,8 @@ public class Routing {
 			// Wait for the MapReduce job to complete before exiting application
 			if(runType.equals("-pseudo")){
 				if(job.waitForCompletion(true)){
-					printEndTime(startTime, runType, System.getenv("HADOOP_HOME")+"/pseudo"+"Time.csv");
+					//printEndTime(startTime, runType, System.getenv("HADOOP_HOME")+"/pseudo"+"Time.csv");
+					System.out.println("Job completed, check the output");
 					System.exit(0);
 				}
 				System.exit(1);

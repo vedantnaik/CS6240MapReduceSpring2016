@@ -21,20 +21,25 @@ public class AirlineRoutingReducer extends Reducer<Text, AirlineMapperValue, Tex
 		String[] keyParts = key.toString().split("\t");
 		String month = keyParts[3];
 		
-		Classifier rfClassifier = null;
-		try {
-			 rfClassifier = RFModelMaker.getMonthModelFromFileSystem(context, new Text(month));
-			 if(rfClassifier == null) {System.err.println("CLASSIFIER MISSING!! month : " + key.toString()); return;}
-		} catch (Exception e) {
-			System.err.println("Problem reading the model for month " + key.toString());
-			e.printStackTrace();
-			return;
-		}
+//		Classifier rfClassifier = null;
+//		try {
+//			 rfClassifier = RFModelMaker.getMonthModelFromFileSystem(context, new Text(month));
+//			 if(rfClassifier == null) {System.err.println("CLASSIFIER MISSING!! month : " + key.toString()); return;}
+//		} catch (Exception e) {
+//			System.err.println("Problem reading the model for month " + key.toString());
+//			e.printStackTrace();
+//			return;
+//		} // do we need this/.
 		
 		
-		RFModelMaker rfModel = new RFModelMaker();
-		Instances testingInstances = new Instances("Testing", rfModel.getAirlineAttributes(), RFModelMaker.Constants.ATTR_SIZE); 
-		testingInstances.setClassIndex(RFModelMaker.Constants.PRED_CLASS_INDEX);
+		//RFModelMaker rfModel = new RFModelMaker();
+		//Instances testingInstances = new Instances("Testing", rfModel.getAirlineAttributes(), RFModelMaker.Constants.ATTR_SIZE); 
+		//testingInstances.setClassIndex(RFModelMaker.Constants.PRED_CLASS_INDEX);
+		
+		System.out.println("--------------------------------------------------");
+		System.out.println("------------------ENTERED REDUCER-----------------");
+		System.out.println("--------------------------------------------------");
+		
 		
 		ArrayList<AirlineMapperValue> Orig_listOfAMVs = new ArrayList<AirlineMapperValue>();
 		ArrayList<AirlineMapperValue> Dest_listOfAMVs = new ArrayList<AirlineMapperValue>();
@@ -49,7 +54,7 @@ public class AirlineRoutingReducer extends Reducer<Text, AirlineMapperValue, Tex
 		
 		for (AirlineMapperValue incoming_amv : Dest_listOfAMVs){
 		
-			Instance inst = new DenseInstance(RFModelMaker.Constants.ATTR_SIZE);
+			/*Instance inst = new DenseInstance(RFModelMaker.Constants.ATTR_SIZE);
 			inst.setDataset(testingInstances);
 			inst.setValue(0, (double) incoming_amv.getCrsArrTime().get());
 			inst.setValue(1, (double) incoming_amv.getCrsDepTime().get());
@@ -71,9 +76,10 @@ public class AirlineRoutingReducer extends Reducer<Text, AirlineMapperValue, Tex
 				System.err.println("Unable to predict for flight ");
 				e.printStackTrace();
 				continue;
-			}
+			}*/
 			
-			if(!g_amv_isDelayed){
+			//if(!g_amv_isDelayed){
+			if(true){
 				for (AirlineMapperValue outgoing_amv : Orig_listOfAMVs) {
 					if (isConnection(outgoing_amv, incoming_amv)) {
 						
@@ -107,6 +113,7 @@ public class AirlineRoutingReducer extends Reducer<Text, AirlineMapperValue, Tex
 						// output of the format:
 						//Origin Dest    incoming flnum   outgoing flnum   duration of two legs
 						// NY     BOS <=>     xxxx       +    xxxx       +      3000
+						System.out.println("inside n square:: " + sumDuration);
 						context.write(new Text(incoming_amv.getOrigin() + "\t" + outgoing_amv.getDest()), 
 									new Text(incoming_amv.getFlNum() + "\t" + outgoing_amv.getFlNum() + "\t" + sumDuration));
 					}
