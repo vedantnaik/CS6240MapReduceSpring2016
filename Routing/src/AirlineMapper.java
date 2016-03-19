@@ -22,17 +22,27 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 			String correctedString = fileEntry.replaceAll(", ", ":");
 			String[] fields = correctedString.split(",");
 			
-			if (FileRecord.csvHeaders.size() == fields.length && FileRecord.isRecordValid(fields)){
+			/*System.out.println("--------------------------------------------------");
+			System.out.println("------------------ENTERED MAPPER------------------");
+			System.out.println("--------------------------------------------------");
+			
+			System.out.println("--------------------------------------------------");
+			System.out.println("-----------------CHECKING RECORDS------------------");
+			System.out.println("--------------------------------------------------");
+			*/
+			
+			if (FileRecord.csvHeaders.size() + 1 == fields.length && FileRecord.isTestRecordValid(fields)){
 				
 				String carMonthKey = FileRecord.getValueOf(fields,FileRecord.Field.MONTH);
 				
 				String flightDate = FileRecord.getValueOf(fields, FileRecord.Field.FL_DATE);
 				String[] fldate = flightDate.split("-");
-				String year = fldate[0];
-				String month = fldate[1];
-				String day = fldate[2];
-				
-				
+				//String year = fldate[0];
+				//String month = fldate[1];
+				//String day = fldate[2];
+				String year = FileRecord.getValueOf(fields, FileRecord.Field.YEAR);
+				String month = FileRecord.getValueOf(fields, FileRecord.Field.MONTH);
+				String day = FileRecord.getValueOf(fields, FileRecord.Field.DAY_OF_MONTH);
 				long crsArrTime; 	
 				long crsDepTime; 
 				long actualArrTime;
@@ -43,13 +53,15 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 				String destinationId;
 				String carrierId;
 				String crsElapsedTime;
+				String dest;
+				String origin;
 				
 				try {
 					// Store java date in long so that it will help in finding connections that span over days and months
 					crsArrTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.CRS_ARR_TIME));
 					crsDepTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.CRS_DEP_TIME));
-					actualArrTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.ARR_TIME));
-					actualDepTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.DEP_TIME));
+					//actualArrTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.ARR_TIME));
+					//actualDepTime = getJavaDateInLong(year, month, day, FileRecord.getValueOf(fields, FileRecord.Field.DEP_TIME));
 				
 					flNum = Integer.parseInt((FileRecord.getValueOf(fields, FileRecord.Field.FL_NUM)));
 					
@@ -64,10 +76,11 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 				
 				flNum = Integer.parseInt((FileRecord.getValueOf(fields, FileRecord.Field.FL_NUM)));
 				distance = FileRecord.getValueOf(fields, FileRecord.Field.DISTANCE);
-				originId = (FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN_AIRPORT_ID));
 				destinationId = (FileRecord.getValueOf(fields, FileRecord.Field.DEST_AIRPORT_ID));
 				carrierId = (FileRecord.getValueOf(fields,FileRecord.Field.CARRIER));
 				crsElapsedTime = FileRecord.getValueOf(fields, FileRecord.Field.CRS_ELAPSED_TIME);
+				dest = FileRecord.getValueOf(fields, FileRecord.Field.DEST);
+				origin = FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN);
 				
 				// make for dest
 				AirlineMapperValue amvDest = new AirlineMapperValue(
@@ -81,22 +94,20 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 						new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DAY_OF_MONTH))),
 						new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DAY_OF_WEEK))),
 						new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DISTANCE_GROUP))),
-						new DoubleWritable( Double.parseDouble(FileRecord.getValueOf(fields, FileRecord.Field.ARR_DELAY)) > 0 ? 1 : 0 ),
+						//new DoubleWritable( Double.parseDouble(FileRecord.getValueOf(fields, FileRecord.Field.ARR_DELAY)) > 0 ? 1 : 0 ),
 						new Text(flightDate),
 						new IntWritable(FileRecord.dateIsAroundHoliday(flightDate, 2)),
 						new Text(AirlineMapperValue.CONN_TYPE_DEST), 
 						new LongWritable(crsArrTime), 
 						new LongWritable(crsDepTime), 
-						new LongWritable(actualArrTime), 
-						new LongWritable(actualDepTime), 
-						new Text(distance),
-						new Text(originId), 
-						new Text(destinationId), 
+						new Text(distance),  
 						new Text(carrierId), 
 						new Text(day), 
 						new Text(month), 
-						new Text(crsElapsedTime)
-						);
+						new Text(crsElapsedTime),
+						new Text(dest),
+						new Text(origin),
+						new Text(year));
 							
 				String carDestYearMonthKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + 
 						FileRecord.getValueOf(fields, FileRecord.Field.DEST) + "\t" +
@@ -117,27 +128,29 @@ public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue
 						new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DAY_OF_MONTH))),
 						new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DAY_OF_WEEK))),
 						new IntWritable(Integer.parseInt(FileRecord.getValueOf(fields, FileRecord.Field.DISTANCE_GROUP))),
-						new DoubleWritable( Double.parseDouble(FileRecord.getValueOf(fields, FileRecord.Field.ARR_DELAY)) > 0 ? 1 : 0 ),
+						//new DoubleWritable( Double.parseDouble(FileRecord.getValueOf(fields, FileRecord.Field.ARR_DELAY)) > 0 ? 1 : 0 ),
 						new Text(flightDate),
 						new IntWritable(FileRecord.dateIsAroundHoliday(flightDate, 2)),
 						new Text(AirlineMapperValue.CONN_TYPE_ORIGIN), 
 						new LongWritable(crsArrTime), 
 						new LongWritable(crsDepTime), 
-						new LongWritable(actualArrTime), 
-						new LongWritable(actualDepTime), 
-						new Text(distance),
-						new Text(originId), 
-						new Text(destinationId), 
+						new Text(distance), 
 						new Text(carrierId), 
 						new Text(day), 
 						new Text(month), 
-						new Text(crsElapsedTime)
-						);
+						new Text(crsElapsedTime),
+						new Text(dest),
+						new Text(origin),
+						new Text(year));
 							
 				String carOrigYearMonthKey = FileRecord.getValueOf(fields, FileRecord.Field.CARRIER) + "\t" + 
 						FileRecord.getValueOf(fields, FileRecord.Field.ORIGIN) + "\t" +
 						FileRecord.getValueOf(fields, FileRecord.Field.YEAR) + "\t" +
 						FileRecord.getValueOf(fields, FileRecord.Field.MONTH);
+				
+				//System.out.println("--------------------AT CONTEXT.WRITE------------------");
+				//System.out.println("key carrier -> " + (FileRecord.getValueOf(fields, FileRecord.Field.CARRIER).toString()));
+				//System.out.println("value -> " + crsDepTime + " " + crsArrTime);
 				
 				context.write(new Text(carOrigYearMonthKey), amvOrig);
 				

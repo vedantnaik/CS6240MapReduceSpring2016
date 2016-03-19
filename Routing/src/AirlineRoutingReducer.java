@@ -21,20 +21,25 @@ public class AirlineRoutingReducer extends Reducer<Text, AirlineMapperValue, Tex
 		String[] keyParts = key.toString().split("\t");
 		String month = keyParts[3];
 		
-		Classifier rfClassifier = null;
-		try {
-			 rfClassifier = RFModelMaker.getMonthModelFromFileSystem(context, new Text(month));
-			 if(rfClassifier == null) {System.err.println("CLASSIFIER MISSING!! month : " + key.toString()); return;}
-		} catch (Exception e) {
-			System.err.println("Problem reading the model for month " + key.toString());
-			e.printStackTrace();
-			return;
-		}
+//		Classifier rfClassifier = null;
+//		try {
+//			 rfClassifier = RFModelMaker.getMonthModelFromFileSystem(context, new Text(month));
+//			 if(rfClassifier == null) {System.err.println("CLASSIFIER MISSING!! month : " + key.toString()); return;}
+//		} catch (Exception e) {
+//			System.err.println("Problem reading the model for month " + key.toString());
+//			e.printStackTrace();
+//			return;
+//		} // do we need this/.
 		
 		
-		RFModelMaker rfModel = new RFModelMaker();
-		Instances testingInstances = new Instances("Testing", rfModel.getAirlineAttributes(), RFModelMaker.Constants.ATTR_SIZE); 
-		testingInstances.setClassIndex(RFModelMaker.Constants.PRED_CLASS_INDEX);
+		//RFModelMaker rfModel = new RFModelMaker();
+		//Instances testingInstances = new Instances("Testing", rfModel.getAirlineAttributes(), RFModelMaker.Constants.ATTR_SIZE); 
+		//testingInstances.setClassIndex(RFModelMaker.Constants.PRED_CLASS_INDEX);
+		
+		System.out.println("--------------------------------------------------");
+		System.out.println("------------------ENTERED REDUCER-----------------");
+		System.out.println("--------------------------------------------------");
+		
 		
 		ArrayList<AirlineMapperValue> Orig_listOfAMVs = new ArrayList<AirlineMapperValue>();
 		ArrayList<AirlineMapperValue> Dest_listOfAMVs = new ArrayList<AirlineMapperValue>();
@@ -47,20 +52,20 @@ public class AirlineRoutingReducer extends Reducer<Text, AirlineMapperValue, Tex
 			}
 		}
 		
-		for (AirlineMapperValue incomming_amv : Dest_listOfAMVs){
-		
-			Instance inst = new DenseInstance(RFModelMaker.Constants.ATTR_SIZE);
+		for (AirlineMapperValue incoming_amv : Dest_listOfAMVs){
+			
+			/*Instance inst = new DenseInstance(RFModelMaker.Constants.ATTR_SIZE);
 			inst.setDataset(testingInstances);
-			inst.setValue(0, (double) incomming_amv.getCrsArrTime().get());
-			inst.setValue(1, (double) incomming_amv.getCrsDepTime().get());
-			inst.setValue(2, (double) incomming_amv.getQuarter().get());
-			inst.setValue(3, (double) incomming_amv.getOriginAirport().toString().hashCode());
-			inst.setValue(4, (double) incomming_amv.getDestAirport().toString().hashCode());
-			inst.setValue(5, (double) incomming_amv.getCarrier().toString().hashCode());
-			inst.setValue(6, (double) incomming_amv.getDayOfMonth().get());
-			inst.setValue(7, (double) incomming_amv.getDayOfWeek().get());
-			inst.setValue(8, (double) incomming_amv.getDistanceGroup().get());
-			inst.setValue(9, (double) incomming_amv.getIsHoliday().get());
+			inst.setValue(0, (double) incoming_amv.getCrsArrTime().get());
+			inst.setValue(1, (double) incoming_amv.getCrsDepTime().get());
+			inst.setValue(2, (double) incoming_amv.getQuarter().get());
+			inst.setValue(3, (double) incoming_amv.getOriginAirport().toString().hashCode());
+			inst.setValue(4, (double) incoming_amv.getDestAirport().toString().hashCode());
+			inst.setValue(5, (double) incoming_amv.getCarrier().toString().hashCode());
+			inst.setValue(6, (double) incoming_amv.getDayOfMonth().get());
+			inst.setValue(7, (double) incoming_amv.getDayOfWeek().get());
+			inst.setValue(8, (double) incoming_amv.getDistanceGroup().get());
+			inst.setValue(9, (double) incoming_amv.getIsHoliday().get());
 
 			inst.setValue(RFModelMaker.Constants.PRED_CLASS_INDEX, Double.NaN);
 			
@@ -71,14 +76,48 @@ public class AirlineRoutingReducer extends Reducer<Text, AirlineMapperValue, Tex
 				System.err.println("Unable to predict for flight ");
 				e.printStackTrace();
 				continue;
-			}
+			}*/
 			
-			if(!g_amv_isDelayed){
+			//if(!g_amv_isDelayed){
+			if(true){
 				for (AirlineMapperValue outgoing_amv : Orig_listOfAMVs) {
-					if (isConnection(outgoing_amv, incomming_amv)) {
+					if (isConnection(outgoing_amv, incoming_amv)) {
 						
-						double sumDuration = Integer.parseInt(incomming_amv.getCrsElapsedTime().toString()) + Integer.parseInt(outgoing_amv.getCrsElapsedTime().toString());
-						context.write(new Text(incomming_amv.getFlNum() + "/t" + outgoing_amv.getFlNum()), new Text(incomming_amv.getCarrierId() + "\t" + sumDuration));
+						// The output from this reducer should be of the form:
+						
+						// incoming origin + outgoing destination <=> {incoming flight number + outgoing flight number + (total duration)}
+						// This will be read by the next job
+						// An example output is: (one itinerary)
+						/*
+						 * NY BOS <=> xxxx + xxxx + 3000
+						 * SFO BOS <=> xxxx + xxxx + 9000
+						 * CHA SFO <=> xxxx + xxxx + 5000
+						 * */
+						// The subsequent job will read this and compare it to the request file
+						// The format of the request file is: (the last field is to be ignored)
+						// Year Month Day   Origin Destination   Ignore
+						// 2004	 10	   4	BWI	    PHL	           37
+						
+						// If a match is found, then the itinerary will be compared to the Missed04 file
+						// if it matches, then the duration will be added by 100 and pushed into a hashmap
+						// if no match is found, then the itinerary will be pushed as it is into a hashmap
+						// hashmap key could be the origin+dest and the values will be a list of flight itineraries 
+						// we then get the minimum for each origin + dest and print it with the two flight numbers
+						
+						
+						
+						// summing the duration of the two legs of the flight
+						double sumDuration = Integer.parseInt(incoming_amv.getCrsElapsedTime().toString()) 
+											+ Integer.parseInt(outgoing_amv.getCrsElapsedTime().toString());
+						
+						// output of the format:
+						//Origin Dest    incoming flnum   outgoing flnum   duration of two legs
+						// NY     BOS <=>     xxxx       +    xxxx       +      3000
+						// System.out.println("inside n square:: " + sumDuration);
+						context.write(new Text(incoming_amv.getOrigin().toString() + "\t" + outgoing_amv.getDest().toString()), 
+									new Text(incoming_amv.getFlNum().toString() + "\t" + outgoing_amv.getFlNum().toString() + "\t" + sumDuration + "\t"
+											+ incoming_amv.getYear().toString() + "\t" + incoming_amv.getMonth().toString() + "\t" + incoming_amv.getDayOfMonth().toString()
+											));
 					}
 				} 
 			}

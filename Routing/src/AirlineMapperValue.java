@@ -33,16 +33,15 @@ public class AirlineMapperValue implements Writable {
 	
 	LongWritable crsArrTime_long;
 	LongWritable crsDepTime_long;
-	LongWritable actualArrTime_long;
-	LongWritable actualDepTime_long;
 	
 	Text distance;
-	Text originId;
-	Text destinationId;
 	Text carrierId;
 	Text day;
 	Text month;
 	Text crsElapsedTime;
+	Text dest;
+	Text origin;
+	Text year;
 	
 	
 	public AirlineMapperValue(){
@@ -54,27 +53,36 @@ public class AirlineMapperValue implements Writable {
 		this.originAirport = new Text();
 		this.destAirport = new Text();
 		this.carrier = new Text();
-		
 		this.flNum = new IntWritable();
 		
 		this.dayOfMonth = new IntWritable();
 		this.dayOfWeek = new IntWritable();
-		
+		this.distance = new Text();
+		this.carrierId = new Text();
+		this.day = new Text();
+		this.month = new Text();
+		this.crsElapsedTime = new Text();
 		this.distanceGroup = new IntWritable();
-		
-		this.arrDelay = new DoubleWritable();
+		this.connectionLink = new Text();
+		this.crsArrTime_long = new LongWritable();
+		this.crsDepTime_long = new LongWritable();
+		//this.arrDelay = new DoubleWritable();
 	
 		this.flDate = new Text();
 		this.isHoliday = new IntWritable();
+		this.dest = new Text();
+		this.origin = new Text();
+		this.year = new Text();
+		
 	}
 	
-
+// removed: ARR_DELAY
 	public AirlineMapperValue(IntWritable crsArrTime, IntWritable crsDepTime, IntWritable quarter,
 			Text originAirport, Text destAirport, Text carrier, IntWritable flNum, IntWritable dayOfMonth,
-			IntWritable dayOfWeek, IntWritable distanceGroup, DoubleWritable arrDelay, Text flDate, 
+			IntWritable dayOfWeek, IntWritable distanceGroup, Text flDate, 
 			IntWritable isHoliday, Text connectionLink, LongWritable crsArrTime_long, LongWritable crsDepTime_long,
-			LongWritable actualArrTime_long, LongWritable actualDepTime_long, Text distance, Text originId, Text destinationId, 
-			Text carrierId, Text day, Text month, Text crsElapsedTime) {
+			Text distance,  
+			Text carrierId, Text day, Text month, Text crsElapsedTime, Text dest, Text origin, Text year) {
 		super();
 		this.crsArrTime = crsArrTime;
 		this.crsDepTime = crsDepTime;
@@ -85,22 +93,23 @@ public class AirlineMapperValue implements Writable {
 		this.flNum = flNum;
 		this.dayOfMonth = dayOfMonth;
 		this.dayOfWeek = dayOfWeek;
+		//this.distance = distance;
 		this.distanceGroup = distanceGroup;
-		this.arrDelay = arrDelay;
+		this.connectionLink = connectionLink;
+		//this.arrDelay = arrDelay;
 		this.flDate = flDate;
 		this.isHoliday = isHoliday;
 		this.crsArrTime_long = crsArrTime_long;
 		this.crsDepTime_long = crsDepTime_long;
-		this.actualArrTime_long = actualArrTime_long;
-		this.actualDepTime_long = actualDepTime_long;
 		this.flNum = flNum;
 		this.distance = distance;
-		this.originId = originId;
-		this.destinationId = destinationId;
 		this.carrierId = carrierId;
 		this.day = day;
 		this.month = month;
 		this.crsElapsedTime = crsElapsedTime;
+		this.dest = dest;
+		this.origin = origin;
+		this.year = year;
 	}
 
 
@@ -118,10 +127,10 @@ public class AirlineMapperValue implements Writable {
 		
 		this.dayOfMonth = new IntWritable(amv.getDayOfMonth().get());
 		this.dayOfWeek = new IntWritable(amv.getDayOfWeek().get());
-		
+		//this.distance = new Text(amv.getDistance().toString());
 		this.distanceGroup = new IntWritable(amv.getDistanceGroup().get());
 		
-		this.arrDelay = new DoubleWritable(amv.getArrDelay().get());
+		//this.arrDelay = new DoubleWritable(amv.getArrDelay().get());
 
 		this.flDate = new Text(amv.getFlDate().toString());
 		this.isHoliday = new IntWritable(amv.getIsHoliday().get());
@@ -129,15 +138,14 @@ public class AirlineMapperValue implements Writable {
 		this.connectionLink = new Text(amv.getConnectionLink().toString());
 		this.crsArrTime_long = new LongWritable(amv.getCrsArrTime_long().get());
 		this.crsDepTime_long = new LongWritable(amv.getCrsDepTime_long().get());
-		this.actualArrTime_long = new LongWritable(amv.getActualArrTime_long().get());
-		this.actualDepTime_long = new LongWritable(amv.getActualDepTime_long().get());
 		this.distance = new Text(amv.getDistance().toString());
-		this.originId = new Text(amv.getOriginId().toString());
-		this.destinationId = new Text(amv.getDestinationId().toString());
 		this.carrierId = new Text(amv.getCarrierId().toString());
 		this.day = new Text(amv.getDay().toString());
 		this.month = new Text(amv.getMonth().toString());
 		this.crsElapsedTime = new Text(amv.getCrsElapsedTime());
+		this.dest = new Text(amv.getDest());
+		this.origin = new Text(amv.getOrigin());
+		this.year = new Text(amv.getYear());
 	}
 	
 	@Override
@@ -156,8 +164,8 @@ public class AirlineMapperValue implements Writable {
 		dayOfWeek.readFields(inVal);
 		
 		distanceGroup.readFields(inVal);
-		
-		arrDelay.readFields(inVal);
+//		distance.readFields(inVal);
+		//arrDelay.readFields(inVal);
 		
 		flDate.readFields(inVal);
 		isHoliday.readFields(inVal);
@@ -165,16 +173,15 @@ public class AirlineMapperValue implements Writable {
 		connectionLink.readFields(inVal);
 		crsArrTime_long.readFields(inVal);
 		crsDepTime_long.readFields(inVal);
-		actualArrTime_long.readFields(inVal);
-		actualDepTime_long.readFields(inVal);
 
 		distance.readFields(inVal);
-		originId.readFields(inVal);
-		destinationId.readFields(inVal);
 		carrierId.readFields(inVal);
 		day.readFields(inVal);
 		month.readFields(inVal);
 		crsElapsedTime.readFields(inVal);
+		dest.readFields(inVal);
+		origin.readFields(inVal);
+		year.readFields(inVal);
 	}
 
 	@Override
@@ -191,10 +198,10 @@ public class AirlineMapperValue implements Writable {
 		
 		dayOfMonth.write(outVal);
 		dayOfWeek.write(outVal);
-		
+//		distance.write(outVal);
 		distanceGroup.write(outVal);
 		
-		arrDelay.write(outVal);
+		//arrDelay.write(outVal);
 		
 		flDate.write(outVal);
 		isHoliday.write(outVal);
@@ -202,16 +209,15 @@ public class AirlineMapperValue implements Writable {
 		connectionLink.write(outVal);
 		crsArrTime_long.write(outVal);
 		crsDepTime_long.write(outVal);
-		actualArrTime_long.write(outVal);
-		actualDepTime_long.write(outVal);
 
 		distance.write(outVal);
-		originId.write(outVal);
-		destinationId.write(outVal);
 		carrierId.write(outVal);
 		day.write(outVal);
 		month.write(outVal);
 		crsElapsedTime.write(outVal);
+		dest.write(outVal);
+		origin.write(outVal);
+		year.write(outVal);
 	}
 
 	@Override
@@ -241,6 +247,26 @@ public class AirlineMapperValue implements Writable {
 						
 				+ "]";
 	}
+
+	public Text getOrigin() {
+		return origin;
+	}
+
+
+	public void setOrigin(Text origin) {
+		this.origin = origin;
+	}
+
+
+	public Text getDest() {
+		return dest;
+	}
+
+
+	public void setDest(Text dest) {
+		this.dest = dest;
+	}
+
 
 	public IntWritable getCrsArrTime() {
 		return crsArrTime;
@@ -322,13 +348,13 @@ public class AirlineMapperValue implements Writable {
 		this.distanceGroup = distanceGroup;
 	}
 
-	public DoubleWritable getArrDelay() {
+	/*public DoubleWritable getArrDelay() {
 		return arrDelay;
 	}
 
 	public void setArrDelay(DoubleWritable arrDelay) {
 		this.arrDelay = arrDelay;
-	}
+	}*/
 
 
 	public Text getFlDate() {
@@ -382,21 +408,6 @@ public class AirlineMapperValue implements Writable {
 		this.carrierId = carrierId;
 	}
 
-	public Text getDestinationId() {
-		return destinationId;
-	}
-
-	public void setDestinationId(Text destinationId) {
-		this.destinationId = destinationId;
-	}
-
-	public Text getOriginId() {
-		return originId;
-	}
-
-	public void setOriginId(Text originId) {
-		this.originId = originId;
-	}
 
 	public Text getDistance() {
 		return distance;
@@ -430,19 +441,29 @@ public class AirlineMapperValue implements Writable {
 		this.crsDepTime_long = crsDepTime_long;
 	}
 
-	public LongWritable getActualArrTime_long() {
-		return actualArrTime_long;
+	public DoubleWritable getArrDelay() {
+		return arrDelay;
 	}
 
-	public void setActualArrTime(LongWritable actualArrTime_long) {
-		this.actualArrTime_long = actualArrTime_long;
+	public void setArrDelay(DoubleWritable arrDelay) {
+		this.arrDelay = arrDelay;
 	}
 
-	public LongWritable getActualDepTime_long() {
-		return actualDepTime_long;
+	public Text getYear() {
+		return year;
 	}
 
-	public void setActualDepTime(LongWritable actualDepTime_long) {
-		this.actualDepTime_long = actualDepTime_long;
+	public void setYear(Text year) {
+		this.year = year;
 	}
+
+	public void setCrsArrTime_long(LongWritable crsArrTime_long) {
+		this.crsArrTime_long = crsArrTime_long;
+	}
+
+	public void setCrsDepTime_long(LongWritable crsDepTime_long) {
+		this.crsDepTime_long = crsDepTime_long;
+	}
+
+	
 }

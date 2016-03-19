@@ -140,7 +140,7 @@ public class FileRecord {
 		if(fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)].equals("") || fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)].equalsIgnoreCase("NA")){
 			return false;
 		}
-		
+				
 		if(fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)].equals("") || fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)].equalsIgnoreCase("NA")){
 			return false;
 		}
@@ -176,15 +176,15 @@ public class FileRecord {
 		if(fields[csvHeaders.indexOf(Field.DISTANCE_GROUP)].equals("") || fields[csvHeaders.indexOf(Field.DISTANCE_GROUP)].equalsIgnoreCase("NA")){
 			return false;
 		}
-		
+		//System.out.println("record sane!");
 		return true;
 	}
 	
 	protected static boolean isRecordValid(String[] fields) {
 
 		// Special quick checks for MissingConnections assignment
-		if (fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)].equals("") ||
-			fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)].equals("") ||
+		if (//fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)].equals("") ||
+			//fields[csvHeaders.indexOf(Field.CRS_DEP_TIME)].equals("") ||
 			fields[csvHeaders.indexOf(Field.ARR_TIME)].equals("") ||
 			fields[csvHeaders.indexOf(Field.DEP_TIME)].equals("")){
 			return false;
@@ -211,20 +211,25 @@ public class FileRecord {
 
 			timeZone = crsDiff - CRSElapsedTime;
 
-			if (CRSArrTime.getTime() == 0.0 || CRSDepTime.getTime() == 0.0)
+			if (CRSArrTime.getTime() == 0.0 || CRSDepTime.getTime() == 0.0){
+				System.out.println("cannot convert date - 1");
 				return false;
-			if ((timeZone % 60) != 0)
+			}
+			if ((timeZone % 60) != 0){
+				System.out.println("connot convert date - 2");
 				return false;
-
+			}
 		} catch (NumberFormatException e) {
+			System.out.println("NFE for conversion of date time");
 			return false;
 		} catch (ParseException e) {
+			System.out.println("parse exception for conversion of date time");
 			return false;
 		}
 
 		// AirportID, AirportSeqID, CityMarketID, StateFips, Wac should be
 		// larger than 0
-
+		System.out.println("Checking: AirportID, AirportSeqID, CityMarketID, StateFips, Wac");
 		if (Integer.parseInt(fields[csvHeaders.indexOf(Field.ORIGIN_AIRPORT_ID)]) <= 0)
 			return false;
 
@@ -256,46 +261,49 @@ public class FileRecord {
 			return false;
 
 		// Origin, Destination, CityName, State, StateName should not be empty
-
+		System.out.println("checking Origin, Destination, CityName, State, StateName");
 		if (fields[csvHeaders.indexOf(Field.ORIGIN)].equals(""))
 			return false;
 
-		if (fields[csvHeaders.indexOf(Field.ORIGIN_CITY_NAME)].equals(""))
-			return false;
+		//if (fields[csvHeaders.indexOf(Field.ORIGIN_CITY_NAME)].equals(""))
+		//	return false;
 
-		if (fields[csvHeaders.indexOf(Field.ORIGIN_STATE_ABR)].equals(""))
-			return false;
+		//if (fields[csvHeaders.indexOf(Field.ORIGIN_STATE_ABR)].equals(""))
+		//	return false;
 
-		if (fields[csvHeaders.indexOf(Field.ORIGIN_STATE_NM)].equals(""))
-			return false;
+		//if (fields[csvHeaders.indexOf(Field.ORIGIN_STATE_NM)].equals(""))
+		//	return false;
 
-		if (fields[csvHeaders.indexOf(Field.DEST)].equals(""))
+		if (fields[csvHeaders.indexOf(Field.DEST)].equals("")){
+			System.out.println("DEST is invalid");
 			return false;
+		}
 
-		if (fields[csvHeaders.indexOf(Field.DEST_CITY_NAME)].equals(""))
-			return false;
+		//if (fields[csvHeaders.indexOf(Field.DEST_CITY_NAME)].equals(""))
+		//	return false;
 
-		if (fields[csvHeaders.indexOf(Field.DEST_STATE_ABR)].equals(""))
-			return false;
+		//if (fields[csvHeaders.indexOf(Field.DEST_STATE_ABR)].equals(""))
+		//	return false;
 
-		if (fields[csvHeaders.indexOf(Field.DEST_STATE_NM)].equals(""))
-			return false;
+		//if (fields[csvHeaders.indexOf(Field.DEST_STATE_NM)].equals(""))
+		//	return false;
 
 		// For flights that are not Cancelled:
 		int cancelledDigit = 0;
 		try {
-			cancelledDigit = Integer.parseInt(fields[csvHeaders.indexOf(Field.CANCELLED)]);
+			//cancelledDigit = Integer.parseInt(fields[csvHeaders.indexOf(Field.CANCELLED)]);
 		} catch (NumberFormatException e) {
+			System.out.println("NFE for cancelledDigit");
 			cancelledDigit = 0;
 		}
 
-		if (cancelledDigit != 1) {
-			String arrTime = fields[csvHeaders.indexOf(Field.ARR_TIME)];
-			String depTime = fields[csvHeaders.indexOf(Field.DEP_TIME)];
-			String actElapsedTime = fields[csvHeaders.indexOf(Field.ACTUAL_ELAPSED_TIME)];
+		/*if (cancelledDigit != 1) {
+			//String arrTime = fields[csvHeaders.indexOf(Field.ARR_TIME)];
+			//String depTime = fields[csvHeaders.indexOf(Field.DEP_TIME)];
+			//String actElapsedTime = fields[csvHeaders.indexOf(Field.ACTUAL_ELAPSED_TIME)];
 
 			try {
-				long actualElapsedTime = Long.parseLong(actElapsedTime);
+				/*long actualElapsedTime = Long.parseLong(actElapsedTime);
 				long actualDiff = hhmmDiff(arrTime, depTime);
 
 				long actualTimeZone = actualDiff - actualElapsedTime;
@@ -305,13 +313,14 @@ public class FileRecord {
 				long newtimeZone = crsDiff - CRSElapsedTime;
 
 				if (actualTimeZone != newtimeZone) {
+					System.out.println("actualTimeZone != newtimeZone failed");
 					return false;
-				}
+				}*/
 
 				// if ArrDelay > 0 then ArrDelay should equal to ArrDelayMinutes
 				// if ArrDelay < 0 then ArrDelayMinutes should be zero
 				// if ArrDelayMinutes >= 15 then ArrDel15 should be false
-				float arrDelay = Float.parseFloat(fields[csvHeaders.indexOf(Field.ARR_DELAY)]);
+				/*float arrDelay = Float.parseFloat(fields[csvHeaders.indexOf(Field.ARR_DELAY)]);
 
 				float ArrDelayMinutes = Float.parseFloat(fields[csvHeaders.indexOf(Field.ARR_DELAY_NEW)]);
 
@@ -319,18 +328,21 @@ public class FileRecord {
 
 				if (arrDelay > 0.0) {
 					if (arrDelay != ArrDelayMinutes) {
+						System.out.println("arrDelay != ArrDelayMinutes failed");
 						return false;
 					}
 				}
 
 				if (arrDelay < 0.0) {
 					if (ArrDelayMinutes != 0) {
+						System.out.println("ArrDelayMinutes != 0 failed");
 						return false;
 					}
 				}
 
 				if (ArrDelayMinutes > 15.0) {
 					if (arrDel15 != 1) {
+						System.out.println("ArrDelayMinutes > 15.0 failed");
 						return false;
 					}
 				}
@@ -338,9 +350,10 @@ public class FileRecord {
 			} catch (NumberFormatException e) {
 				// no entry found in record
 				// format does not match
+				System.out.println("NFE for timezone");
 				return false;
 			}
-		}
+		}*/
 		// Given sanity checks complete
 
 		// Additional validations
