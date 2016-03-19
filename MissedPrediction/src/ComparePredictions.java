@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 
+import utils.FileRecord;
+
 public class ComparePredictions {
 
 	public static void main(String[] args) {

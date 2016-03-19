@@ -6,6 +6,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
+import utils.AirlineMapperValue;
+import utils.FileRecord;
+
 public class RFPredictorMapper extends Mapper<Object, Text, Text, AirlineMapperValue> {
 
 	@Override

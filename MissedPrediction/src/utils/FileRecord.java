@@ -1,3 +1,4 @@
+package utils;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,65 +12,65 @@ import org.apache.commons.lang.math.NumberUtils;
  * Authors: Vedant Naik, Rohan Joshi
  * */
 public class FileRecord {
-	class Field {
-		static final String CRS_ARR_TIME = "CRS_ARR_TIME";
-		static final String CRS_DEP_TIME = "CRS_DEP_TIME";
-		static final String CRS_ELAPSED_TIME = "CRS_ELAPSED_TIME";
+	public class Field {
+		public static final String CRS_ARR_TIME = "CRS_ARR_TIME";
+		public static final String CRS_DEP_TIME = "CRS_DEP_TIME";
+		public static final String CRS_ELAPSED_TIME = "CRS_ELAPSED_TIME";
 
-		static final String ORIGIN_AIRPORT_ID = "ORIGIN_AIRPORT_ID";
-		static final String ORIGIN_AIRPORT_SEQ_ID = "ORIGIN_AIRPORT_SEQ_ID";
-		static final String ORIGIN_CITY_MARKET_ID = "ORIGIN_CITY_MARKET_ID";
-		static final String ORIGIN_STATE_FIPS = "ORIGIN_STATE_FIPS";
-		static final String ORIGIN_WAC = "ORIGIN_WAC";
-		static final String DEST_AIRPORT_ID = "DEST_AIRPORT_ID";
-		static final String DEST_AIRPORT_SEQ_ID = "DEST_AIRPORT_SEQ_ID";
-		static final String DEST_CITY_MARKET_ID = "DEST_CITY_MARKET_ID";
-		static final String DEST_STATE_FIPS = "DEST_STATE_FIPS";
-		static final String DEST_WAC = "DEST_WAC";
+		public static final String ORIGIN_AIRPORT_ID = "ORIGIN_AIRPORT_ID";
+		public static final String ORIGIN_AIRPORT_SEQ_ID = "ORIGIN_AIRPORT_SEQ_ID";
+		public static final String ORIGIN_CITY_MARKET_ID = "ORIGIN_CITY_MARKET_ID";
+		public static final String ORIGIN_STATE_FIPS = "ORIGIN_STATE_FIPS";
+		public static final String ORIGIN_WAC = "ORIGIN_WAC";
+		public static final String DEST_AIRPORT_ID = "DEST_AIRPORT_ID";
+		public static final String DEST_AIRPORT_SEQ_ID = "DEST_AIRPORT_SEQ_ID";
+		public static final String DEST_CITY_MARKET_ID = "DEST_CITY_MARKET_ID";
+		public static final String DEST_STATE_FIPS = "DEST_STATE_FIPS";
+		public static final String DEST_WAC = "DEST_WAC";
 
-		static final String ORIGIN = "ORIGIN";
-		static final String ORIGIN_CITY_NAME = "ORIGIN_CITY_NAME";
-		static final String ORIGIN_STATE_ABR = "ORIGIN_STATE_ABR";
-		static final String ORIGIN_STATE_NM = "ORIGIN_STATE_NM";
-		static final String DEST = "DEST";
-		static final String DEST_CITY_NAME = "DEST_CITY_NAME";
-		static final String DEST_STATE_ABR = "DEST_STATE_ABR";
-		static final String DEST_STATE_NM = "DEST_STATE_NM";
+		public static final String ORIGIN = "ORIGIN";
+		public static final String ORIGIN_CITY_NAME = "ORIGIN_CITY_NAME";
+		public static final String ORIGIN_STATE_ABR = "ORIGIN_STATE_ABR";
+		public static final String ORIGIN_STATE_NM = "ORIGIN_STATE_NM";
+		public static final String DEST = "DEST";
+		public static final String DEST_CITY_NAME = "DEST_CITY_NAME";
+		public static final String DEST_STATE_ABR = "DEST_STATE_ABR";
+		public static final String DEST_STATE_NM = "DEST_STATE_NM";
 
-		static final String CANCELLED = "CANCELLED";
+		public static final String CANCELLED = "CANCELLED";
 
-		static final String ARR_TIME = "ARR_TIME";
-		static final String DEP_TIME = "DEP_TIME";
-		static final String ACTUAL_ELAPSED_TIME = "ACTUAL_ELAPSED_TIME";
+		public static final String ARR_TIME = "ARR_TIME";
+		public static final String DEP_TIME = "DEP_TIME";
+		public static final String ACTUAL_ELAPSED_TIME = "ACTUAL_ELAPSED_TIME";
 
-		static final String ARR_DELAY = "ARR_DELAY";
-		static final String ARR_DELAY_NEW = "ARR_DELAY_NEW";
-		static final String ARR_DEL15 = "ARR_DEL15";
+		public static final String ARR_DELAY = "ARR_DELAY";
+		public static final String ARR_DELAY_NEW = "ARR_DELAY_NEW";
+		public static final String ARR_DEL15 = "ARR_DEL15";
 
-		static final String AVG_TICKET_PRICE = "AVG_TICKET_PRICE";
+		public static final String AVG_TICKET_PRICE = "AVG_TICKET_PRICE";
 
-		static final String FL_DATE = "FL_DATE";
-		static final String CARRIER = "CARRIER";
+		public static final String FL_DATE = "FL_DATE";
+		public static final String CARRIER = "CARRIER";
 
-		static final String YEAR = "YEAR";
-		static final String MONTH = "MONTH";
+		public static final String YEAR = "YEAR";
+		public static final String MONTH = "MONTH";
 		
-		static final String DISTANCE = "DISTANCE";
-		static final String AIR_TIME = "AIR_TIME";
+		public static final String DISTANCE = "DISTANCE";
+		public static final String AIR_TIME = "AIR_TIME";
 		
-		static final String DIV_DISTANCE = "DIV_DISTANCE";
+		public static final String DIV_DISTANCE = "DIV_DISTANCE";
 		
-		static final String FL_NUM = "FL_NUM";
+		public static final String FL_NUM = "FL_NUM";
 		
-		static final String DAY_OF_MONTH = "DAY_OF_MONTH";
-		static final String DAY_OF_WEEK = "DAY_OF_WEEK";
+		public static final String DAY_OF_MONTH = "DAY_OF_MONTH";
+		public static final String DAY_OF_WEEK = "DAY_OF_WEEK";
 		
-		static final String TAXI_OUT = "TAXI_OUT";
-		static final String TAXI_IN = "TAXI_IN";
+		public static final String TAXI_OUT = "TAXI_OUT";
+		public static final String TAXI_IN = "TAXI_IN";
 		
-		static final String DISTANCE_GROUP = "DISTANCE_GROUP";
+		public static final String DISTANCE_GROUP = "DISTANCE_GROUP";
 		
-		static final String QUARTER = "QUARTER";
+		public static final String QUARTER = "QUARTER";
 		
 	}
 
@@ -107,11 +108,11 @@ public class FileRecord {
 			"2015-05-10", "2015-05-25", "2015-06-21", "2015-07-03", "2015-07-04", "2015-09-07", "2015-10-12", "2015-10-31", "2015-11-11", 
 			"2015-11-26", "2015-12-24", "2015-12-25", "2015-12-26", "2015-12-31");
 	
-	protected static String getValueOf(String[] fields, String headerName) {
+	public static String getValueOf(String[] fields, String headerName) {
 		return fields[csvHeaders.indexOf(headerName)];
 	}
 	
-	protected static boolean isValidationRecordValid(String[] validRecords){
+	public static boolean isValidationRecordValid(String[] validRecords){
 		boolean valIsCorrect = validRecords[1].equalsIgnoreCase("TRUE") || validRecords[1].equalsIgnoreCase("FALSE");
 		
 		String[] flnum_fldate_crsDep = validRecords[0].split("_");
@@ -127,7 +128,7 @@ public class FileRecord {
 		return false;
 	}
 	
-	protected static boolean isTestRecordValid(String[] fields) {
+	public static boolean isTestRecordValid(String[] fields) {
 		
 		if(fields[csvHeaders.indexOf(Field.MONTH)].equals("") || fields[csvHeaders.indexOf(Field.MONTH)].equalsIgnoreCase("NA")){
 			return false;
@@ -180,7 +181,7 @@ public class FileRecord {
 		return true;
 	}
 	
-	protected static boolean isRecordValid(String[] fields) {
+	public static boolean isRecordValid(String[] fields) {
 
 		// Special quick checks for MissingConnections assignment
 		if (fields[csvHeaders.indexOf(Field.CRS_ARR_TIME)].equals("") ||
@@ -370,7 +371,7 @@ public class FileRecord {
 		return hhmm;
 	}
 	
-	private static int hhmmDiff(String arr, String dep) {
+	public static int hhmmDiff(String arr, String dep) {
 		
 		arr = makeCompleteHHMM(arr);
 		dep = makeCompleteHHMM(dep);

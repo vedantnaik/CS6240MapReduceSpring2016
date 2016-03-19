@@ -1,14 +1,7 @@
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.zip.GZIPInputStream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -17,14 +10,11 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-import au.com.bytecode.opencsv.CSVReader;
 import utils.AirlineMapperValue;
-import weka.classifiers.Classifier;
-import weka.core.DenseInstance;
-import weka.core.Instance;
-import weka.core.Instances;
 
-public class RFPredictor {
+public class DelayedTrain {
+	
+	
 	public static void main(String[] args) {
 		
 		String runType = args[0];
@@ -32,10 +22,9 @@ public class RFPredictor {
 		String inputTestPath = args[2];
 		String outputPath = args[3];
 		String rfModel = args[4];
-		String train_or_test = args[5];
+		String predictionMode = args[5];
+		String validationFile = args[6];
 		
-		long startTime = System.currentTimeMillis();
-
 		Configuration conf = new Configuration();
 		
 		conf.set("rfModelLocation", rfModel);
@@ -44,33 +33,32 @@ public class RFPredictor {
 		
 		try {
 			Job job = Job.getInstance(conf);
-			job.setJobName("RFPredictor");
-			job.setJarByClass(RFPredictor.class);
+			job.setJobName("DelayedTrain");
+			job.setJarByClass(DelayedTrain.class);
 			
-			job.setMapperClass(RFPredictorMapper.class);
-			job.setReducerClass(RFPredictorReducer.class);
+			job.setMapperClass(DelayedTrainMapper.class);
+			job.setReducerClass(DelayedTrainReducer.class);
 			
 			job.setMapOutputKeyClass(Text.class);
 			job.setMapOutputValueClass(AirlineMapperValue.class);
 			
 			job.setOutputKeyClass(Text.class);
-			job.setOutputValueClass(Text.class);
-			
-			FileInputFormat.addInputPath(job, new Path(inputTestPath));
-			FileOutputFormat.setOutputPath(job, new Path(outputPath));			
+			job.setOutputValueClass(Text.class);			
+			FileInputFormat.addInputPath(job, new Path(inputTrainPath));
+			FileOutputFormat.setOutputPath(job, new Path(outputPath));
 			
 			if(job.waitForCompletion(true)){
 				System.exit(0);
 			}
-		
+			
 		} catch (IllegalArgumentException | IOException e) {
-			System.err.println("RF PREDICTOR CLASS");
+			System.err.println("DELAYED TRAIN CLASS");
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			System.err.println("RF PREDICTOR CLASS");
+			System.err.println("DELAYED TRAIN CLASS");
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			System.err.println("RF PREDICTOR CLASS");
+			System.err.println("DELAYED TRAIN CLASS");
 			e.printStackTrace();
 		}
 	

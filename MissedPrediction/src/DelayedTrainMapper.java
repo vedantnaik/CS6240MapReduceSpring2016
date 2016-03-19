@@ -7,7 +7,10 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
-public class AirlineMapper extends Mapper<Object, Text, Text, AirlineMapperValue> {
+import utils.AirlineMapperValue;
+import utils.FileRecord;
+
+public class DelayedTrainMapper extends Mapper<Object, Text, Text, AirlineMapperValue> {
 
 		@Override
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
